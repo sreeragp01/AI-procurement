@@ -1,59 +1,86 @@
-const API_BASE = '/api/v1';
+import axios from 'axios';
 
-export const fetchDashboardMetrics = async () => {
-  try {
-    const res = await fetch(`${API_BASE}/dashboard/metrics/`);
-    if (!res.ok) throw new Error("Failed to load metrics");
-    return await res.json();
-  } catch (err) {
-    console.warn("Using fallback metric data:", err);
-    return null;
-  }
+const API_BASE_URL = '/api/v1';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export default api;
+
+export const authAPI = {
+  login: (credentials) => api.post('/auth/login/', credentials),
+  register: (userData) => api.post('/auth/register/', userData),
 };
 
-export const fetchVendors = async () => {
-  try {
-    const res = await fetch(`${API_BASE}/vendors/list/`);
-    if (!res.ok) throw new Error("Failed to fetch vendors");
-    return await res.json();
-  } catch (err) {
-    console.warn("Using fallback vendor list:", err);
-    return null;
-  }
+export const vendorsAPI = {
+  getVendors: () => api.get('/vendors/'),
+  getVendorById: (id) => api.get(`/vendors/${id}/`),
+  createVendor: (data) => api.post('/vendors/', data),
+  getCategories: () => api.get('/categories/'),
 };
 
-export const fetchPurchaseRequests = async () => {
-  try {
-    const res = await fetch(`${API_BASE}/procurement/purchase-requests/`);
-    if (!res.ok) throw new Error("Failed to fetch purchase requests");
-    return await res.json();
-  } catch (err) {
-    console.warn("Using fallback purchase requests:", err);
-    return null;
-  }
+export const procurementAPI = {
+  // Organizations & Departments
+  getOrganizations: () => api.get('/organizations/'),
+  getDepartments: () => api.get('/departments/'),
+
+  // Purchase Requests
+  getPurchaseRequests: () => api.get('/purchase-requests/'),
+  createPurchaseRequest: (data) => api.post('/purchase-requests/', data),
+  approvePurchaseRequest: (id, data) => api.post(`/purchase-requests/${id}/approve/`, data),
+  rejectPurchaseRequest: (id, data) => api.post(`/purchase-requests/${id}/reject/`, data),
+  generateRFQ: (id) => api.post(`/purchase-requests/${id}/generate-rfq/`),
+
+  // Approval Engine & Rules
+  getApprovalRules: () => api.get('/approval-rules/'),
+  getApprovalLogs: () => api.get('/approval-logs/'),
+
+  // RFQs & Invitations
+  getRFQs: () => api.get('/rfqs/'),
+  getVendorInvitations: () => api.get('/vendor-invitations/'),
+
+  // Purchase Orders
+  getPurchaseOrders: () => api.get('/purchase-orders/'),
+  createPOFromQuotation: (data) => api.post('/purchase-orders/create-from-quotation/', data),
+  advancePOStatus: (id) => api.post(`/purchase-orders/${id}/advance-status/`),
+
+  // Goods Receipts (GRN)
+  getGoodsReceipts: () => api.get('/goods-receipts/'),
+  createGoodsReceipt: (data) => api.post('/goods-receipts/', data),
+
+  // Invoices (3-Way Match)
+  getInvoices: () => api.get('/invoices/'),
+  createInvoice: (data) => api.post('/invoices/', data),
+
+  // Payments
+  getPayments: () => api.get('/payments/'),
+  createPayment: (data) => api.post('/payments/', data),
 };
 
-export const fetchAIQuoteComparison = async (rfqId = "00000000-0000-0000-0000-000000000000") => {
-  try {
-    const res = await fetch(`${API_BASE}/ai/quote-compare/${rfqId}/`);
-    if (!res.ok) throw new Error("Failed to run AI comparison");
-    return await res.json();
-  } catch (err) {
-    console.warn("Using fallback AI quote comparison:", err);
-    return null;
-  }
+export const quotationsAPI = {
+  getQuotations: (rfqId) => api.get(`/quotations/${rfqId ? `?rfq=${rfqId}` : ''}`),
+  uploadQuotationPDF: (formData) => api.post('/quotations/upload/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
-export const sendCopilotQuery = async (query) => {
-  try {
-    const res = await fetch(`${API_BASE}/ai/chat/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
-    });
-    if (!res.ok) throw new Error("Copilot error");
-    return await res.json();
-  } catch (err) {
-    return { query, reply: "AI Copilot analyzing database... " + err.message };
-  }
+export const contractsAPI = {
+  getContracts: () => api.get('/contracts/'),
+  uploadContractPDF: (formData) => api.post('/contracts/upload-audit/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+};
+
+export const aiAPI = {
+  getQuoteMatrix: (rfqId) => api.get(`/ai/quote-matrix/?rfq_id=${rfqId}`),
+  auditContractRisk: (title, vendorId) => api.post('/ai/audit-contract-risk/', { title, vendor_id: vendorId }),
+  copilotChat: (query) => api.post('/ai/copilot-chat/', { query }),
+};
+
+export const dashboardAPI = {
+  getMetrics: () => api.get('/dashboard/metrics/'),
 };

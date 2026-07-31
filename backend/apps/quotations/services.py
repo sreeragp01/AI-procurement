@@ -3,7 +3,7 @@ import json
 import re
 import pdfplumber
 from pypdf import PdfReader
-from apps.quotations.models import Quotation
+from apps.quotations.models import Quotation, QuotationItem
 from apps.procurement.models import RFQ
 from apps.vendors.models import Vendor
 from apps.ai_engine.services import generate_quote_comparison_matrix
@@ -44,28 +44,15 @@ def parse_quotation_pdf_ai(quotation_id):
         return {"error": "Quotation not found"}
 
     if not quotation.document or not os.path.exists(quotation.document.path):
-        # Fallback if no physical PDF file exists (simulated extraction)
-        extracted_data = {
-            "vendor_name": quotation.vendor.company_name,
-            "line_items": [
-                {"description": "Developer Laptops M3 Pro", "quantity": 20, "unit_price": 180000, "total": 3600000}
-            ],
-            "tax_rate": "18% GST Included",
-            "delivery_days": quotation.delivery_lead_time_days or 5,
-            "warranty_months": quotation.warranty_months or 24,
-            "payment_terms": quotation.payment_terms or "20% Advance, 80% Net 30"
-        }
-        quotation.extracted_data = extracted_data
-        quotation.ocr_status = Quotation.OCRStatus.COMPLETED
+        quotation.ocr_status = Quotation.OCRStatus.SUCCESS
         quotation.save()
-        return {"success": True, "extracted_data": extracted_data}
+        return {"success": True, "quotation_id": str(quotation.id)}
 
     # Extract text from real uploaded file
     raw_text = extract_raw_text_from_pdf(quotation.document.path)
 
-    # Simple domain parsing heuristics + regex for prices & delivery
-    total_amount = quotation.total_quoted_amount
-    delivery_days = quotation.delivery_lead_time_days
+    total_amount = quotation.total_price
+    delivery_days = quotation.delivery_days
     warranty_months = quotation.warranty_months
     payment_terms = quotation.payment_terms
 
@@ -101,22 +88,11 @@ def parse_quotation_pdf_ai(quotation_id):
         except ValueError:
             pass
 
-    extracted_data = {
-        "raw_text_snippet": raw_text[:500] if raw_text else "Scanned document processed cleanly",
-        "parsed_total_price": float(total_amount),
-        "parsed_delivery_days": delivery_days,
-        "parsed_warranty_months": warranty_months,
-        "parsed_payment_terms": payment_terms,
-        "line_items": [
-            {"item_name": "Extracted Item Lot", "quantity": 1, "unit_price": float(total_amount), "total": float(total_amount)}
-        ]
-    }
-
-    quotation.total_quoted_amount = total_amount
-    quotation.delivery_lead_time_days = delivery_days
+    quotation.raw_text = raw_text[:2000]
+    quotation.total_price = total_amount
+    quotation.delivery_days = delivery_days
     quotation.warranty_months = warranty_months
-    quotation.extracted_data = extracted_data
-    quotation.ocr_status = Quotation.OCRStatus.COMPLETED
+    quotation.ocr_status = Quotation.OCRStatus.SUCCESS
     quotation.save()
 
     # Automatically recalculate RFQ AI comparison matrix
@@ -124,6 +100,5 @@ def parse_quotation_pdf_ai(quotation_id):
 
     return {
         "success": True,
-        "quotation_id": str(quotation.id),
-        "extracted_data": extracted_data
+        "quotation_id": str(quotation.id)
     }

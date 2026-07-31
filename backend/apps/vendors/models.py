@@ -15,6 +15,16 @@ class Category(models.Model):
         return self.name
 
 class Vendor(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = 'ACTIVE', 'Active / Qualified'
+        SUSPENDED = 'SUSPENDED', 'Suspended'
+        BLACKLISTED = 'BLACKLISTED', 'Blacklisted'
+
+    class RiskLevel(models.TextChoices):
+        LOW = 'LOW', 'Low Risk'
+        MEDIUM = 'MEDIUM', 'Medium Risk'
+        HIGH = 'HIGH', 'High Risk'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     company_name = models.CharField(max_length=255)
     contact_person = models.CharField(max_length=100)
@@ -26,13 +36,21 @@ class Vendor(models.Model):
     country = models.CharField(max_length=100, default='India')
     
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=4.5)
-    categories = models.ManyToManyField(Category, related_name='vendors')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
+    is_preferred = models.BooleanField(default=False, help_text="Preferred supplier for fast-track RFQs")
     
-    # AI generated vendor metrics
-    ai_performance_score = models.JSONField(default=dict, blank=True, help_text="Stores AI vendor scoring breakdown: { quality_score, on_time_delivery_rate, price_competitiveness, risk_level }")
+    # Enhanced Performance & Risk Metrics
+    on_time_delivery_rate = models.DecimalField(max_digits=5, decimal_places=2, default=95.00, help_text="On-time delivery percentage")
+    quality_score = models.DecimalField(max_digits=5, decimal_places=2, default=96.50, help_text="Inspected quality pass rate percentage")
+    risk_level = models.CharField(max_length=20, choices=RiskLevel.choices, default=RiskLevel.LOW)
+    certifications = models.JSONField(default=list, blank=True, help_text="List of certifications e.g. ['ISO 9001', 'SOC2', 'GMP']")
+    bank_details_encrypted = models.JSONField(default=dict, blank=True, help_text="Secure bank account & IFSC / IBAN details")
+    
+    categories = models.ManyToManyField(Category, related_name='vendors')
+    ai_performance_score = models.JSONField(default=dict, blank=True, help_text="Stores AI vendor scoring breakdown")
     is_verified = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.company_name} ({self.rating}★)"
+        return f"{self.company_name} ({self.get_status_display()} — {self.rating}★)"

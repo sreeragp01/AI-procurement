@@ -55,8 +55,8 @@ def generate_quote_comparison_matrix(rfq_id):
     fastest_delivery = float('inf')
 
     for q in quotes:
-        total = float(q.total_quoted_amount)
-        lead_days = q.delivery_lead_time_days
+        total = float(q.total_price)
+        lead_days = q.delivery_days
         
         if total < lowest_price:
             lowest_price = total
@@ -66,7 +66,6 @@ def generate_quote_comparison_matrix(rfq_id):
             fastest_delivery = lead_days
             min_delivery_quote = q
 
-        # Risk heuristics based on payment terms and vendor rating
         rating = float(q.vendor.rating)
         risk_level = "LOW"
         risk_reasons = []
@@ -109,7 +108,6 @@ def generate_quote_comparison_matrix(rfq_id):
 
     best_overall = min_price_quote if min_price_quote else quotes.first()
 
-    # Try live OpenAI GPT-4o synthesis if key available
     gpt_prompt = f"""
     Evaluate the following vendor quotation matrix for RFQ {rfq_id}:
     {json.dumps(matrix, indent=2)}
@@ -124,8 +122,8 @@ def generate_quote_comparison_matrix(rfq_id):
     else:
         summary = (
             f"AI Procurement Copilot Recommendation:\n"
-            f"1. Best Financial Value: {min_price_quote.vendor.company_name if min_price_quote else 'N/A'} at {min_price_quote.currency} {min_price_quote.total_quoted_amount:,.2f}.\n"
-            f"2. Fastest Execution: {min_delivery_quote.vendor.company_name if min_delivery_quote else 'N/A'} with {min_delivery_quote.delivery_lead_time_days} days lead time.\n"
+            f"1. Best Financial Value: {min_price_quote.vendor.company_name if min_price_quote else 'N/A'} at {min_price_quote.currency} {min_price_quote.total_price:,.2f}.\n"
+            f"2. Fastest Execution: {min_delivery_quote.vendor.company_name if min_delivery_quote else 'N/A'} with {min_delivery_quote.delivery_days} days lead time.\n"
             f"3. Executive Decision: Recommend awarding to {best_overall.vendor.company_name} based on optimal price-to-risk balance."
         )
 
@@ -182,7 +180,6 @@ def copilot_rag_query(user_query):
     """
     query_lower = user_query.lower()
 
-    # If OpenAI client is present, use GPT-4o for natural language answer
     if client:
         vendors = Vendor.objects.all()[:5]
         context = f"Total vendors: {vendors.count()}, Vendors list: {[v.company_name for v in vendors]}"
@@ -191,7 +188,6 @@ def copilot_rag_query(user_query):
         if gpt_res and "reply" in gpt_res:
             return gpt_res["reply"]
 
-    # Rule-based fallback
     if "vendor" in query_lower or "lowest" in query_lower or "price" in query_lower:
         vendors = Vendor.objects.all().order_by('-rating')[:5]
         vendor_names = ", ".join([f"{v.company_name} ({v.rating}★)" for v in vendors])

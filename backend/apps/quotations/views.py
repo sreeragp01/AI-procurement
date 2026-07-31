@@ -2,12 +2,12 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from .models import Quotation
-from .serializers import QuotationSerializer
+from .models import Quotation, QuotationItem
+from .serializers import QuotationSerializer, QuotationItemSerializer
 from .services import parse_quotation_pdf_ai
 
 class QuotationViewSet(viewsets.ModelViewSet):
-    queryset = Quotation.objects.all().order_by('-submitted_at')
+    queryset = Quotation.objects.all().order_by('-created_at')
     serializer_class = QuotationSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -31,13 +31,12 @@ class QuotationUploadView(APIView):
         if not rfq_id or not vendor_id:
             return Response({'error': 'rfq and vendor IDs are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create or update quotation record
         quotation, created = Quotation.objects.get_or_create(
             rfq_id=rfq_id,
             vendor_id=vendor_id,
             defaults={
-                'total_quoted_amount': request.data.get('total_quoted_amount', 3700000.00),
-                'delivery_lead_time_days': request.data.get('delivery_lead_time_days', 4),
+                'total_price': request.data.get('total_price', 3700000.00),
+                'delivery_days': request.data.get('delivery_days', 4),
                 'warranty_months': request.data.get('warranty_months', 24),
                 'payment_terms': request.data.get('payment_terms', '30% Advance, 70% Net 30'),
             }

@@ -1,103 +1,159 @@
-from rest_framework import viewsets, permissions, status, filters
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from datetime import timedelta
 from django.utils import timezone
-from .models import PurchaseRequest, RFQ, PurchaseOrder
-from .serializers import PurchaseRequestSerializer, RFQSerializer, PurchaseOrderSerializer
-from apps.vendors.models import Vendor
-from apps.quotations.models import Quotation
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from .models import (
+    Organization, Department, PurchaseRequest, PurchaseRequestItem,
+    ApprovalRule, ApprovalLog, RFQ, VendorInvitation, PurchaseOrder,
+    GoodsReceipt, Invoice, Payment
+)
+from .serializers import (
+    OrganizationSerializer, DepartmentSerializer, PurchaseRequestSerializer,
+    PurchaseRequestItemSerializer, ApprovalRuleSerializer, ApprovalLogSerializer,
+    RFQSerializer, VendorInvitationSerializer, PurchaseOrderSerializer,
+    GoodsReceiptSerializer, InvoiceSerializer, PaymentSerializer
+)
+from apps.vendors.models import Vendor, Category
+
+class OrganizationViewSet(viewsets.ModelViewSet):
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class DepartmentViewSet(viewsets.ModelViewSet):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class PurchaseRequestViewSet(viewsets.ModelViewSet):
     queryset = PurchaseRequest.objects.all().order_by('-created_at')
     serializer_class = PurchaseRequestSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['request_number', 'title', 'priority', 'status']
 
-class ApprovePurchaseRequestView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    def post(self, request, pk):
-        try:
-            pr = PurchaseRequest.objects.get(pk=pk)
-        except PurchaseRequest.DoesNotExist:
-            return Response({'error': 'Purchase Request not found'}, status=status.HTTP_404_NOT_FOUND)
+    @action(detail=True, methods=['post'], url_path='approve')
+    def approve(self, request, pk=None):
+        pr = self.get_object()
+        user = request.user
+        comments = request.data.get('comments', 'Approved by Manager')
 
         pr.status = PurchaseRequest.Status.APPROVED
         pr.save()
-        serializer = PurchaseRequestSerializer(pr)
-        return Response({'message': f'{pr.request_number} approved successfully', 'purchase_request': serializer.data})
 
-class RejectPurchaseRequestView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        # Log approval
+        if user and user.is_authenticated:
+            ApprovalLog.objects.create(
+                purchase_request=pr,
+                approver=user,
+                action=ApprovalLog.Action.APPROVED,
+                comments=comments
+            )
 
-    def post(self, request, pk):
-        try:
-            pr = PurchaseRequest.objects.get(pk=pk)
-        except PurchaseRequest.DoesNotExist:
-            return Response({'error': 'Purchase Request not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': f'Purchase Request {pr.request_number} approved successfully.', 'status': pr.status})
+
+    @action(detail=True, methods=['post'], url_path='reject')
+    def reject(self, request, pk=None):
+        pr = self.get_object()
+        user = request.user
+        comments = request.data.get('comments', 'Rejected by Approver')
 
         pr.status = PurchaseRequest.Status.REJECTED
         pr.save()
-        serializer = PurchaseRequestSerializer(pr)
-        return Response({'message': f'{pr.request_number} rejected', 'purchase_request': serializer.data})
 
-class GenerateRFQFromPRView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        if user and user.is_authenticated:
+            ApprovalLog.objects.create(
+                purchase_request=pr,
+                approver=user,
+                action=ApprovalLog.Action.REJECTED,
+                comments=comments
+            )
 
-    def post(self, request, pk):
-        try:
-            pr = PurchaseRequest.objects.get(pk=pk)
-        except PurchaseRequest.DoesNotExist:
-            return Response({'error': 'Purchase Request not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': f'Purchase Request {pr.request_number} rejected.', 'status': pr.status})
 
-        # Auto select vendors matching the PR category
-        matching_vendors = Vendor.objects.filter(categories=pr.category)
-        if not matching_vendors.exists():
-            matching_vendors = Vendor.objects.all()[:3]
+    @action(detail=True, methods=['post'], url_path='generate-rfq')
+    def generate_rfq(self, request, pk=None):
+        pr = self.get_object()
+        if pr.status != PurchaseRequest.Status.APPROVED:
+            return Response({'error': 'Purchase Request must be APPROVED before generating an RFQ'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Create RFQ
+        deadline = timezone.now() + timedelta(days=7)
         rfq = RFQ.objects.create(
             purchase_request=pr,
-            submission_deadline=timezone.now() + timezone.timedelta(days=7),
-            terms_and_conditions=f"Standard 1-year warranty required. Category: {pr.category.name}",
-            status=RFQ.Status.PUBLISHED
+            submission_deadline=deadline,
+            terms_and_conditions="Standard 30-day payment terms, GST included, minimum 12-month warranty."
         )
-        rfq.invited_vendors.set(matching_vendors)
-        rfq.save()
+
+        # Auto-invite vendors matching category
+        matching_vendors = Vendor.objects.filter(categories=pr.category, status=Vendor.Status.ACTIVE)
+        for vendor in matching_vendors:
+            VendorInvitation.objects.create(rfq=rfq, vendor=vendor, status=VendorInvitation.Status.INVITED)
 
         pr.status = PurchaseRequest.Status.RFQ_CREATED
         pr.save()
 
-        serializer = RFQSerializer(rfq)
+        rfq_serializer = RFQSerializer(rfq)
         return Response({
-            'message': f'RFQ {rfq.rfq_number} generated and dispatched to {matching_vendors.count()} vendors!',
-            'rfq': serializer.data
+            'message': f'RFQ {rfq.rfq_number} generated and sent to {matching_vendors.count()} category vendors.',
+            'rfq': rfq_serializer.data
         }, status=status.HTTP_201_CREATED)
+
+class PurchaseRequestItemViewSet(viewsets.ModelViewSet):
+    queryset = PurchaseRequestItem.objects.all()
+    serializer_class = PurchaseRequestItemSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ApprovalRuleViewSet(viewsets.ModelViewSet):
+    queryset = ApprovalRule.objects.all()
+    serializer_class = ApprovalRuleSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ApprovalLogViewSet(viewsets.ModelViewSet):
+    queryset = ApprovalLog.objects.all().order_by('-timestamp')
+    serializer_class = ApprovalLogSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class RFQViewSet(viewsets.ModelViewSet):
     queryset = RFQ.objects.all().order_by('-created_at')
     serializer_class = RFQSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['rfq_number', 'status']
+
+class VendorInvitationViewSet(viewsets.ModelViewSet):
+    queryset = VendorInvitation.objects.all().order_by('-invited_at')
+    serializer_class = VendorInvitationSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class PurchaseOrderViewSet(viewsets.ModelViewSet):
     queryset = PurchaseOrder.objects.all().order_by('-created_at')
     serializer_class = PurchaseOrderSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['po_number', 'status']
 
-class CreatePOFromQuotationView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    @action(detail=True, methods=['post'], url_path='advance-status')
+    def advance_status(self, request, pk=None):
+        po = self.get_object()
+        status_flow = {
+            PurchaseOrder.Status.ISSUED: PurchaseOrder.Status.ACKNOWLEDGED,
+            PurchaseOrder.Status.ACKNOWLEDGED: PurchaseOrder.Status.IN_TRANSIT,
+            PurchaseOrder.Status.IN_TRANSIT: PurchaseOrder.Status.DELIVERED,
+            PurchaseOrder.Status.DELIVERED: PurchaseOrder.Status.COMPLETED
+        }
+        
+        if po.status in status_flow:
+            po.status = status_flow[po.status]
+            po.save()
+            return Response({'message': f'PO status updated to {po.get_status_display()}', 'status': po.status})
+        else:
+            return Response({'message': f'PO is already in final state: {po.get_status_display()}'})
 
-    def post(self, request):
+    @action(detail=False, methods=['post'], url_path='create-from-quotation')
+    def create_from_quotation(self, request):
         rfq_id = request.data.get('rfq_id')
         vendor_id = request.data.get('vendor_id')
         total_amount = request.data.get('total_amount', 3600000.00)
 
         if not rfq_id or not vendor_id:
-            return Response({'error': 'rfq_id and vendor_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'rfq_id and vendor_id required'}, status=status.HTTP_400_BAD_REQUEST)
 
         rfq = RFQ.objects.get(id=rfq_id)
         vendor = Vendor.objects.get(id=vendor_id)
@@ -106,7 +162,7 @@ class CreatePOFromQuotationView(APIView):
             rfq=rfq,
             selected_vendor=vendor,
             total_amount=total_amount,
-            delivery_date=timezone.now().date() + timezone.timedelta(days=7),
+            delivery_date=timezone.now().date() + timedelta(days=5),
             status=PurchaseOrder.Status.ISSUED
         )
 
@@ -114,25 +170,19 @@ class CreatePOFromQuotationView(APIView):
         rfq.save()
 
         serializer = PurchaseOrderSerializer(po)
-        return Response({
-            'message': f'Purchase Order {po.po_number} issued to {vendor.company_name} successfully!',
-            'purchase_order': serializer.data
-        }, status=status.HTTP_201_CREATED)
+        return Response({'message': f'Awarded to {vendor.company_name} and generated PO {po.po_number}', 'po': serializer.data}, status=status.HTTP_201_CREATED)
 
-class UpdatePOStatusView(APIView):
+class GoodsReceiptViewSet(viewsets.ModelViewSet):
+    queryset = GoodsReceipt.objects.all().order_by('-received_date')
+    serializer_class = GoodsReceiptSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    def post(self, request, pk):
-        try:
-            po = PurchaseOrder.objects.get(pk=pk)
-        except PurchaseOrder.DoesNotExist:
-            return Response({'error': 'Purchase Order not found'}, status=status.HTTP_404_NOT_FOUND)
+class InvoiceViewSet(viewsets.ModelViewSet):
+    queryset = Invoice.objects.all().order_by('-created_at')
+    serializer_class = InvoiceSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-        new_status = request.data.get('status')
-        if new_status in dict(PurchaseOrder.Status.choices):
-            po.status = new_status
-            po.save()
-            serializer = PurchaseOrderSerializer(po)
-            return Response({'message': f'{po.po_number} status updated to {po.get_status_display()}', 'purchase_order': serializer.data})
-        else:
-            return Response({'error': 'Invalid PO status'}, status=status.HTTP_400_BAD_REQUEST)
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.all().order_by('-payment_date')
+    serializer_class = PaymentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

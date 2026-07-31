@@ -2,184 +2,304 @@ import os
 import sys
 import django
 
-# Setup Django Environment
+# Setup Django environment
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from django.contrib.auth import get_user_model
+from datetime import date, timedelta
+from django.utils import timezone
+from apps.accounts.models import User
 from apps.vendors.models import Category, Vendor
-from apps.procurement.models import PurchaseRequest, RFQ, PurchaseOrder
-from apps.quotations.models import Quotation
+from apps.procurement.models import (
+    Organization, Department, PurchaseRequest, PurchaseRequestItem,
+    ApprovalRule, ApprovalLog, RFQ, VendorInvitation, PurchaseOrder,
+    GoodsReceipt, Invoice, Payment
+)
+from apps.quotations.models import Quotation, QuotationItem
 from apps.contracts.models import Contract
 
-User = get_user_model()
+def seed_enterprise_data():
+    print("Seeding AI Procurement Copilot Enterprise v2.0 Data...")
 
-def seed():
-    print("[*] Seeding database with initial AI Procurement Copilot demo data...")
+    # 1. Organizations & Departments
+    org_apex, _ = Organization.objects.get_or_create(name="Apex Global Procurement", defaults={"domain": "apexprocure.com"})
+    org_biomed, _ = Organization.objects.get_or_create(name="BioMed Health Corp", defaults={"domain": "biomedhealth.org"})
+    org_buildcon, _ = Organization.objects.get_or_create(name="BuildCon Infra Ltd", defaults={"domain": "buildconinfra.com"})
 
-    # 1. Admin User
-    admin_user, created = User.objects.get_or_create(
-        email="admin@apexprocure.com",
+    dept_it, _ = Department.objects.get_or_create(name="IT & Engineering", organization=org_apex, defaults={"annual_budget": 25000000.00})
+    dept_med, _ = Department.objects.get_or_create(name="Medical Equipment", organization=org_biomed, defaults={"annual_budget": 50000000.00})
+
+    # 2. Users & RBAC
+    admin_user, _ = User.objects.get_or_create(
+        email='admin@apexprocure.com',
         defaults={
-            "first_name": "Sreerag",
-            "last_name": "Manager",
-            "role": User.Role.ADMIN,
-            "organization_name": "Apex Global Procurement",
-            "is_staff": True,
-            "is_superuser": True
+            'first_name': 'Sreerag',
+            'last_name': 'Manager',
+            'role': User.Role.ADMIN,
+            'organization_name': 'Apex Global Procurement',
+            'department_name': 'IT & Engineering',
+            'approval_limit': 10000000.00,
+            'is_staff': True,
+            'is_superuser': True
         }
     )
-    if created:
-        admin_user.set_password("admin123")
-        admin_user.save()
-        print("  [+] Created Admin user: admin@apexprocure.com / admin123")
+    admin_user.set_password('admin123')
+    admin_user.save()
 
-    # 2. Categories
-    cat_it, _ = Category.objects.get_or_create(name="IT & Hardware", code="CAT-IT", description="Laptops, Servers, Monitors, Networking")
-    cat_office, _ = Category.objects.get_or_create(name="Office & Stationery", code="CAT-OFF", description="Furniture, Paper, Office Supplies")
-    cat_industrial, _ = Category.objects.get_or_create(name="Industrial Raw Materials", code="CAT-IND", description="Steel, Fasteners, Cables, Sheet Metals")
-
-    print("  [+] Created product categories")
-
-    # 3. Vendors
-    v1, _ = Vendor.objects.get_or_create(
-        email="sales@techcorp.com",
+    manager_user, _ = User.objects.get_or_create(
+        email='manager@apexprocure.com',
         defaults={
-            "company_name": "TechCorp Hardware Ltd",
-            "contact_person": "Vikram Malhotra",
+            'first_name': 'Ananya',
+            'last_name': 'Sharma',
+            'role': User.Role.PROCUREMENT_MANAGER,
+            'organization_name': 'Apex Global Procurement',
+            'department_name': 'IT & Engineering',
+            'approval_limit': 1000000.00
+        }
+    )
+    manager_user.set_password('manager123')
+    manager_user.save()
+
+    finance_user, _ = User.objects.get_or_create(
+        email='finance@apexprocure.com',
+        defaults={
+            'first_name': 'Rajesh',
+            'last_name': 'Verma',
+            'role': User.Role.FINANCE,
+            'organization_name': 'Apex Global Procurement',
+            'department_name': 'Finance & Accounting',
+            'approval_limit': 5000000.00
+        }
+    )
+    finance_user.set_password('finance123')
+    finance_user.save()
+
+    # 3. Product Categories
+    cat_it, _ = Category.objects.get_or_create(name="IT Hardware & Laptops", defaults={"code": "CAT-IT", "description": "Laptops, servers, workstations"})
+    cat_raw, _ = Category.objects.get_or_create(name="Industrial Raw Steel", defaults={"code": "CAT-STEEL", "description": "Structural steel and fasteners"})
+    cat_med, _ = Category.objects.get_or_create(name="Medical & Lab Devices", defaults={"code": "CAT-MED", "description": "Diagnostic and hospital equipment"})
+
+    # 4. Enterprise Vendors
+    v_tech, _ = Vendor.objects.get_or_create(
+        company_name="TechCorp Hardware Ltd",
+        defaults={
+            "contact_person": "Vikram Seth",
+            "email": "sales@techcorp.com",
             "phone": "+91 98765 43210",
-            "tax_id": "GST27AAACT1234F1Z5",
-            "address": "Bandra Kurla Complex, Mumbai",
-            "city": "Mumbai",
-            "country": "India",
-            "rating": 4.85,
-            "ai_performance_score": {"quality_score": 98, "on_time_delivery_rate": 96, "risk_level": "LOW"}
-        }
-    )
-    v1.categories.add(cat_it)
-
-    v2, _ = Vendor.objects.get_or_create(
-        email="info@nexusdigital.com",
-        defaults={
-            "company_name": "Nexus Digital Solutions",
-            "contact_person": "Ananya Sharma",
-            "phone": "+91 98123 78901",
-            "tax_id": "GST29BBBND5678G2Z4",
-            "address": "Indiranagar, Bengaluru",
+            "tax_id": "27AAACT1234F1Z5",
             "city": "Bengaluru",
             "country": "India",
-            "rating": 4.60,
-            "ai_performance_score": {"quality_score": 92, "on_time_delivery_rate": 90, "risk_level": "LOW"}
+            "rating": 4.85,
+            "status": Vendor.Status.ACTIVE,
+            "is_preferred": True,
+            "on_time_delivery_rate": 98.20,
+            "quality_score": 99.10,
+            "risk_level": Vendor.RiskLevel.LOW,
+            "certifications": ["ISO 9001", "SOC2 Type II"],
+            "ai_performance_score": {"quality": 99, "timeliness": 98, "pricing_competitiveness": 95}
         }
     )
-    v2.categories.add(cat_it)
+    v_tech.categories.add(cat_it)
 
-    v3, _ = Vendor.objects.get_or_create(
-        email="contact@globalsteel.com",
+    v_nexus, _ = Vendor.objects.get_or_create(
+        company_name="Nexus Digital Solutions",
         defaults={
-            "company_name": "Global Steel & Infra",
-            "contact_person": "Rajesh Verma",
-            "phone": "+91 97111 22334",
-            "tax_id": "GST07CCCGS9101H3Z3",
-            "address": "Okhla Industrial Area, New Delhi",
-            "city": "New Delhi",
+            "contact_person": "Meera Patel",
+            "email": "bids@nexusdigital.com",
+            "phone": "+91 98111 22334",
+            "tax_id": "27BBBND5678G2Z1",
+            "city": "Mumbai",
             "country": "India",
-            "rating": 4.30,
-            "ai_performance_score": {"quality_score": 88, "on_time_delivery_rate": 84, "risk_level": "MEDIUM"}
+            "rating": 4.20,
+            "status": Vendor.Status.ACTIVE,
+            "is_preferred": False,
+            "on_time_delivery_rate": 90.00,
+            "quality_score": 92.50,
+            "risk_level": Vendor.RiskLevel.MEDIUM,
+            "certifications": ["ISO 9001"],
+            "ai_performance_score": {"quality": 91, "timeliness": 89, "pricing_competitiveness": 88}
         }
     )
-    v3.categories.add(cat_industrial)
+    v_nexus.categories.add(cat_it)
 
-    print("  [+] Created demo vendors: TechCorp, Nexus Digital, Global Steel")
+    v_steel, _ = Vendor.objects.get_or_create(
+        company_name="Global Steel & Infra",
+        defaults={
+            "contact_person": "Rohan Gupta",
+            "email": "orders@globalsteel.com",
+            "phone": "+91 97222 33445",
+            "tax_id": "27CCCGS9012H3Z8",
+            "city": "Pune",
+            "country": "India",
+            "rating": 4.65,
+            "status": Vendor.Status.ACTIVE,
+            "is_preferred": True,
+            "on_time_delivery_rate": 96.50,
+            "quality_score": 97.00,
+            "risk_level": Vendor.RiskLevel.LOW,
+            "certifications": ["ISO 9001", "ISO 14001"],
+            "ai_performance_score": {"quality": 97, "timeliness": 96, "pricing_competitiveness": 94}
+        }
+    )
+    v_steel.categories.add(cat_raw)
 
-    # 4. Purchase Request
-    pr1, _ = PurchaseRequest.objects.get_or_create(
+    # 5. Approval Rules
+    ApprovalRule.objects.get_or_create(name="Manager Threshold", min_amount=0, max_amount=500000, required_role="PROCUREMENT_MANAGER")
+    ApprovalRule.objects.get_or_create(name="Finance Director Threshold", min_amount=500001, max_amount=10000000, required_role="FINANCE")
+
+    # 6. Purchase Request with Line Items
+    pr, created = PurchaseRequest.objects.get_or_create(
         request_number="PR-2026-0001",
         defaults={
-            "created_by": admin_user,
-            "category": cat_it,
-            "title": "Procurement of 20 Developer Laptops (M3 / 32GB RAM)",
-            "items": [
-                {"item_name": "Developer Laptop (M3 Pro, 32GB, 1TB SSD)", "quantity": 20, "est_unit_price": 200000}
-            ],
-            "total_budget": 4000000.00,
-            "required_by_date": "2026-08-20",
-            "priority": PurchaseRequest.Priority.HIGH,
-            "status": PurchaseRequest.Status.RFQ_CREATED
+            'created_by': admin_user,
+            'department': dept_it,
+            'category': cat_it,
+            'title': "Developer Laptops & High-Perf Workstations",
+            'total_budget': 3600000.00,
+            'required_by_date': date.today() + timedelta(days=14),
+            'priority': PurchaseRequest.Priority.HIGH,
+            'status': PurchaseRequest.Status.APPROVED
         }
     )
 
-    print("  [+] Created sample Purchase Request PR-2026-0001")
+    if created:
+        PurchaseRequestItem.objects.create(
+            purchase_request=pr,
+            item_name="Apple MacBook Pro M3 Max (36GB RAM, 1TB SSD)",
+            quantity=20.0,
+            unit_of_measure="Units",
+            target_unit_price=180000.00,
+            specifications="Space Black, 16-inch Retina XDR display, AppleCare+ included"
+        )
+        ApprovalLog.objects.create(
+            purchase_request=pr,
+            approver=manager_user,
+            action=ApprovalLog.Action.APPROVED,
+            comments="Approved budget for Q3 Developer Hardware Refresh."
+        )
 
-    # 5. RFQ
-    rfq1, _ = RFQ.objects.get_or_create(
+    # 7. RFQ & Vendor Invitations
+    rfq, _ = RFQ.objects.get_or_create(
         rfq_number="RFQ-2026-0001",
         defaults={
-            "purchase_request": pr1,
-            "submission_deadline": "2026-08-10T18:00:00Z",
-            "terms_and_conditions": "1 Year Onsite Warranty required. Payment terms 30 days post delivery.",
-            "status": RFQ.Status.EVALUATED
+            'purchase_request': pr,
+            'submission_deadline': timezone.now() + timedelta(days=7),
+            'terms_and_conditions': "All bids must include 18% IGST, minimum 12-month warranty, and delivery to Mumbai Hub.",
+            'status': RFQ.Status.EVALUATED
         }
     )
-    rfq1.invited_vendors.add(v1, v2)
 
-    print("  [+] Created sample RFQ-2026-0001")
+    VendorInvitation.objects.get_or_create(rfq=rfq, vendor=v_tech, defaults={"status": VendorInvitation.Status.RESPONDED})
+    VendorInvitation.objects.get_or_create(rfq=rfq, vendor=v_nexus, defaults={"status": VendorInvitation.Status.RESPONDED})
 
-    # 6. Quotations
-    q1, _ = Quotation.objects.get_or_create(
-        rfq=rfq1,
-        vendor=v1,
+    # 8. Quotations & Line Items
+    q1, q1_created = Quotation.objects.get_or_create(
+        rfq=rfq,
+        vendor=v_tech,
         defaults={
-            "total_quoted_amount": 3600000.00,
-            "delivery_lead_time_days": 5,
-            "warranty_months": 24,
-            "payment_terms": "20% Advance, 80% Net 30 days after inspection",
-            "extracted_data": {
-                "unit_price": 180000,
-                "tax_rate": "18% GST included",
-                "discount": "10% Bulk Discount Applied"
-            }
+            'total_price': 3600000.00,
+            'currency': 'INR',
+            'delivery_days': 5,
+            'warranty_months': 24,
+            'payment_terms': 'Net 30 Days',
+            'ocr_status': Quotation.OCRStatus.SUCCESS
         }
     )
+    if q1_created:
+        QuotationItem.objects.create(
+            quotation=q1,
+            item_name="Apple MacBook Pro M3 Max (36GB, 1TB)",
+            quantity=20.0,
+            unit_price=152542.37,
+            tax_rate=18.00,
+            total_price=3600000.00
+        )
 
-    q2, _ = Quotation.objects.get_or_create(
-        rfq=rfq1,
-        vendor=v2,
+    q2, q2_created = Quotation.objects.get_or_create(
+        rfq=rfq,
+        vendor=v_nexus,
         defaults={
-            "total_quoted_amount": 3850000.00,
-            "delivery_lead_time_days": 3,
-            "warranty_months": 12,
-            "payment_terms": "100% Advance Payment on Order Confirmation",
-            "extracted_data": {
-                "unit_price": 192500,
-                "tax_rate": "18% GST extra",
-                "discount": "5% Express Shipping Discount"
-            }
+            'total_price': 3850000.00,
+            'currency': 'INR',
+            'delivery_days': 3,
+            'warranty_months': 12,
+            'payment_terms': '100% Advance Payment',
+            'ocr_status': Quotation.OCRStatus.SUCCESS
         }
     )
 
-    print("  [+] Created Quotations for TechCorp & Nexus Digital")
+    # 9. Purchase Order
+    po, _ = PurchaseOrder.objects.get_or_create(
+        po_number="PO-2026-0001",
+        defaults={
+            'rfq': rfq,
+            'selected_vendor': v_tech,
+            'total_amount': 3600000.00,
+            'delivery_date': date.today() + timedelta(days=5),
+            'status': PurchaseOrder.Status.IN_TRANSIT
+        }
+    )
 
-    # 7. Sample Contract
-    c1, _ = Contract.objects.get_or_create(
+    # 10. Goods Receipt (GRN)
+    grn, _ = GoodsReceipt.objects.get_or_create(
+        grn_number="GRN-2026-0001",
+        defaults={
+            'purchase_order': po,
+            'received_by': admin_user,
+            'inspection_status': GoodsReceipt.InspectionStatus.PASSED,
+            'received_items': [
+                {"item_name": "Apple MacBook Pro M3 Max", "qty_ordered": 20, "qty_received": 20, "qty_accepted": 20, "notes": "All sealed boxes verified clean"}
+            ]
+        }
+    )
+
+    # 11. Invoice (3-Way Matching)
+    inv, _ = Invoice.objects.get_or_create(
+        invoice_number="INV-2026-0001",
+        defaults={
+            'purchase_order': po,
+            'goods_receipt': grn,
+            'vendor': v_tech,
+            'invoice_amount': 3600000.00,
+            'tax_amount': 549152.54,
+            'matching_status': Invoice.MatchingStatus.MATCHED,
+            'due_date': date.today() + timedelta(days=30)
+        }
+    )
+
+    # 12. Payment
+    Payment.objects.get_or_create(
+        payment_number="PAY-2026-0001",
+        defaults={
+            'invoice': inv,
+            'amount_paid': 3600000.00,
+            'payment_method': Payment.Method.BANK_TRANSFER,
+            'status': Payment.Status.COMPLETED,
+            'transaction_reference': 'HDFC982301923011'
+        }
+    )
+
+    # 13. Contract
+    Contract.objects.get_or_create(
         contract_number="CNT-2026-0001",
         defaults={
-            "title": "Annual Hardware Maintenance & SLA Contract",
-            "vendor": v1,
-            "start_date": "2026-01-01",
-            "end_date": "2026-12-31",
-            "value": 1500000.00,
-            "status": Contract.Status.ACTIVE,
-            "ai_analysis": {
-                "overall_risk": "LOW",
-                "missing_clauses": ["Liquidated damages capped at 5%"],
-                "renewal_alert": "2026-11-30"
+            'vendor': v_steel,
+            'title': "Annual Master Service Agreement & Steel Supply Contract",
+            'value': 15000000.00,
+            'start_date': date.today() - timedelta(days=330),
+            'end_date': date.today() + timedelta(days=35),
+            'status': Contract.Status.ACTIVE,
+            'ai_analysis': {
+                "overall_risk_score": 68,
+                "missing_clauses": [
+                    {"clause": "Liquidated Damages / Delay Penalty", "severity": "HIGH", "risk": "No delay penalty clause for late delivery."}
+                ]
             }
         }
     )
 
-    print("  [+] Created sample SLA Contract CNT-2026-0001")
-    print("[SUCCESS] Database seeding complete!")
+    print("Enterprise v2.0 Database Seed Completed Successfully!")
 
 if __name__ == '__main__':
-    seed()
+    seed_enterprise_data()
