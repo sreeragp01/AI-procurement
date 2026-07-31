@@ -16,13 +16,13 @@ export const ApprovalCenter = () => {
     try {
       setLoading(true);
       const [prsRes, rulesRes, logsRes] = await Promise.all([
-        procurementAPI.getPurchaseRequests(),
-        procurementAPI.getApprovalRules(),
-        procurementAPI.getApprovalLogs()
+        procurementAPI.getPurchaseRequests().catch(() => ({ data: [] })),
+        procurementAPI.getApprovalRules().catch(() => ({ data: [] })),
+        procurementAPI.getApprovalLogs().catch(() => ({ data: [] }))
       ]);
-      setRequests(prsRes.data);
-      setRules(rulesRes.data);
-      setLogs(logsRes.data);
+      setRequests(Array.isArray(prsRes.data) ? prsRes.data : []);
+      setRules(Array.isArray(rulesRes.data) ? rulesRes.data : []);
+      setLogs(Array.isArray(logsRes.data) ? logsRes.data : []);
     } catch (err) {
       console.error("Error fetching approval data:", err);
     } finally {
@@ -62,12 +62,12 @@ export const ApprovalCenter = () => {
 
       {/* Configurable Threshold Rules Banner */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-        {rules.map((r) => (
+        {(rules || []).map((r) => (
           <div key={r.id} className="glass-panel" style={{ padding: '1.25rem', borderLeft: '4px solid #6366F1' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#818CF8', textTransform: 'uppercase' }}>Configured Rule Threshold</div>
             <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFF', margin: '0.2rem 0' }}>{r.name}</div>
             <div style={{ fontSize: '0.9rem', color: '#10B981', fontWeight: 700 }}>
-              ₹{parseFloat(r.min_amount).toLocaleString()} — ₹{parseFloat(r.max_amount).toLocaleString()}
+              ₹{parseFloat(r.min_amount || 0).toLocaleString()} — ₹{parseFloat(r.max_amount || 0).toLocaleString()}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <UserCheck size={14} /> Required Role: <strong style={{ color: '#FFF' }}>{r.required_role}</strong>
@@ -80,7 +80,7 @@ export const ApprovalCenter = () => {
       <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF', marginBottom: '1rem' }}>Pending Requisition Approvals</h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '3rem' }}>
-        {requests.map((pr) => (
+        {(requests || []).map((pr) => (
           <div key={pr.id} className="glass-panel" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.3rem' }}>
@@ -96,15 +96,14 @@ export const ApprovalCenter = () => {
               </div>
 
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', gap: '1.5rem' }}>
-                <span>Requested Budget: <strong style={{ color: '#10B981' }}>₹{parseFloat(pr.total_budget).toLocaleString()}</strong></span>
+                <span>Requested Budget: <strong style={{ color: '#10B981' }}>₹{parseFloat(pr.total_budget || 0).toLocaleString()}</strong></span>
                 <span>Required By: <strong>{pr.required_by_date}</strong></span>
                 <span>Requested By: <strong>{pr.created_by_email}</strong></span>
               </div>
 
-              {/* Line Items Preview */}
               {pr.line_items && pr.line_items.length > 0 && (
                 <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', background: '#0F172A', borderRadius: '6px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  Line Item: <strong style={{ color: '#FFF' }}>{pr.line_items[0].item_name}</strong> (x{pr.line_items[0].quantity} {pr.line_items[0].unit_of_measure}) @ ₹{parseFloat(pr.line_items[0].target_unit_price).toLocaleString()}
+                  Line Item: <strong style={{ color: '#FFF' }}>{pr.line_items[0].item_name}</strong> (x{pr.line_items[0].quantity} {pr.line_items[0].unit_of_measure}) @ ₹{parseFloat(pr.line_items[0].target_unit_price || 0).toLocaleString()}
                 </div>
               )}
             </div>
@@ -144,7 +143,7 @@ export const ApprovalCenter = () => {
             </tr>
           </thead>
           <tbody>
-            {logs.map((l) => (
+            {(logs || []).map((l) => (
               <tr key={l.id}>
                 <td style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>{new Date(l.timestamp).toLocaleString()}</td>
                 <td><strong>{l.purchase_request}</strong></td>

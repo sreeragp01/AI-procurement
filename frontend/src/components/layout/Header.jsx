@@ -17,13 +17,19 @@ export const Header = () => {
   const fetchNotifications = async () => {
     try {
       const res = await procurementAPI.getNotifications();
-      setNotifications(res.data);
+      if (res && Array.isArray(res.data)) {
+        setNotifications(res.data);
+      } else {
+        setNotifications([]);
+      }
     } catch (err) {
       console.error("Error fetching notifications:", err);
+      setNotifications([]);
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+  const unreadCount = safeNotifications.filter(n => n && !n.is_read).length;
 
   return (
     <header style={{
@@ -56,7 +62,7 @@ export const Header = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <Building2 size={16} color="#818CF8" />
           <select 
-            value={user.organization} 
+            value={user?.organization || 'Apex Global Procurement'} 
             onChange={(e) => switchOrganization(e.target.value)}
             className="form-select"
             style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem', height: '36px' }}
@@ -71,7 +77,7 @@ export const Header = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <UserCheck size={16} color="var(--text-muted)" />
           <select 
-            value={user.role} 
+            value={user?.role || 'ADMIN'} 
             onChange={(e) => switchRole(e.target.value)}
             className="form-select"
             style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem', height: '36px' }}
@@ -130,7 +136,7 @@ export const Header = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '260px', overflowY: 'auto' }}>
-                {notifications.map((n) => (
+                {safeNotifications.map((n) => (
                   <div 
                     key={n.id} 
                     onClick={() => { setShowDropdown(false); navigate(n.link || '/'); }}
@@ -165,11 +171,11 @@ export const Header = () => {
             color: '#FFF',
             fontSize: '0.85rem'
           }}>
-            {user.name.charAt(0)}
+            {user?.name ? user.name.charAt(0) : 'S'}
           </div>
           <div>
-            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>{user.name}</div>
-            <div style={{ fontSize: '0.68rem', color: '#818CF8', fontWeight: 600 }}>{user.organization}</div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>{user?.name || 'Sreerag Manager'}</div>
+            <div style={{ fontSize: '0.68rem', color: '#818CF8', fontWeight: 600 }}>{user?.organization || 'Apex Global Procurement'}</div>
           </div>
           <button 
             className="btn btn-secondary" 

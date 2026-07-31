@@ -13,10 +13,11 @@ export const Invoices = () => {
   const fetchInvoices = async () => {
     try {
       setLoading(true);
-      const res = await procurementAPI.getInvoices();
-      setInvoices(res.data);
+      const res = await procurementAPI.getInvoices().catch(() => ({ data: [] }));
+      setInvoices(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching invoices:", err);
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -38,7 +39,6 @@ export const Invoices = () => {
         </button>
       </div>
 
-      {/* 3-Way Matching Explanation Banner */}
       <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <FileCheck size={28} color="#FBBF24" />
@@ -51,7 +51,6 @@ export const Invoices = () => {
         </div>
       </div>
 
-      {/* Invoice Table */}
       <div className="glass-panel" style={{ padding: '1.5rem' }}>
         <table className="custom-table">
           <thead>
@@ -66,13 +65,13 @@ export const Invoices = () => {
             </tr>
           </thead>
           <tbody>
-            {invoices.map((inv) => (
+            {(invoices || []).map((inv) => (
               <tr key={inv.id}>
                 <td><strong>{inv.invoice_number}</strong></td>
                 <td>{inv.vendor_name}</td>
                 <td><span className="badge badge-indigo">{inv.po_number}</span></td>
-                <td style={{ fontWeight: 800, color: '#FFF' }}>₹{parseFloat(inv.invoice_amount).toLocaleString()}</td>
-                <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>₹{parseFloat(inv.tax_amount).toLocaleString()}</td>
+                <td style={{ fontWeight: 800, color: '#FFF' }}>₹{parseFloat(inv.invoice_amount || 0).toLocaleString()}</td>
+                <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>₹{parseFloat(inv.tax_amount || 0).toLocaleString()}</td>
                 <td>
                   <span className={`badge ${inv.matching_status === 'MATCHED' ? 'badge-emerald' : 'badge-rose'}`}>
                     <CheckCircle2 size={14} /> {inv.matching_status}

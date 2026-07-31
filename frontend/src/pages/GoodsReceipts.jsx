@@ -13,10 +13,11 @@ export const GoodsReceipts = () => {
   const fetchGRNs = async () => {
     try {
       setLoading(true);
-      const res = await procurementAPI.getGoodsReceipts();
-      setGrns(res.data);
+      const res = await procurementAPI.getGoodsReceipts().catch(() => ({ data: [] }));
+      setGrns(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching GRNs:", err);
+      setGrns([]);
     } finally {
       setLoading(false);
     }
@@ -38,9 +39,8 @@ export const GoodsReceipts = () => {
         </button>
       </div>
 
-      {/* GRN List Cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        {grns.map((grn) => (
+        {(grns || []).map((grn) => (
           <div key={grn.id} className="glass-panel" style={{ padding: '1.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
               <div>
@@ -57,7 +57,6 @@ export const GoodsReceipts = () => {
               </div>
             </div>
 
-            {/* Inspected Line Items Table */}
             {grn.received_items && grn.received_items.length > 0 && (
               <table className="custom-table">
                 <thead>

@@ -13,10 +13,11 @@ export const Payments = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const res = await procurementAPI.getPayments();
-      setPayments(res.data);
+      const res = await procurementAPI.getPayments().catch(() => ({ data: [] }));
+      setPayments(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching payments:", err);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -38,7 +39,6 @@ export const Payments = () => {
         </button>
       </div>
 
-      {/* Payment Table */}
       <div className="glass-panel" style={{ padding: '1.5rem' }}>
         <table className="custom-table">
           <thead>
@@ -53,11 +53,11 @@ export const Payments = () => {
             </tr>
           </thead>
           <tbody>
-            {payments.map((p) => (
+            {(payments || []).map((p) => (
               <tr key={p.id}>
                 <td><strong>{p.payment_number}</strong></td>
                 <td><span className="badge badge-indigo">{p.invoice_number}</span></td>
-                <td style={{ fontWeight: 800, color: '#10B981', fontSize: '1rem' }}>₹{parseFloat(p.amount_paid).toLocaleString()}</td>
+                <td style={{ fontWeight: 800, color: '#10B981', fontSize: '1rem' }}>₹{parseFloat(p.amount_paid || 0).toLocaleString()}</td>
                 <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{p.payment_method}</td>
                 <td style={{ fontSize: '0.82rem', fontFamily: 'monospace', color: '#818CF8' }}>{p.transaction_reference || 'N/A'}</td>
                 <td>
