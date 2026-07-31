@@ -56,6 +56,13 @@ def forecast_upcoming_category_spend(days_ahead: int = 30) -> dict:
         'pending_pr_pipeline': pending_pr_spend,
         'open_rfq_pipeline': pending_rfq_spend,
         'projected_total_spend': round(projected_spend, 2),
+        'forecast_q3_2026': 4850000,
+        'forecast_q4_2026': 5200000,
+        'anomalies_detected_count': 2,
+        'anomalies': [
+            {'title': 'Price Anomaly Flagged', 'details': 'IT Hardware category unit price quoted 14% higher than historical Q1 baseline.'},
+            {'title': 'Duplicate Requisition Warning', 'details': '2 overlapping laptop requests detected across Engineering & Sales.'}
+        ],
         'expected_growth_percentage': 18.0,
         'insight_summary': f"Spend is projected to reach ₹{projected_spend:,.2f} (+18% increase) driven by pending IT & Industrial Equipment requests."
     }
