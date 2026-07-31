@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Layout } from './components/layout/Layout';
 import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
 import { Dashboard } from './pages/Dashboard';
 import { Vendors } from './pages/Vendors';
 import { PurchaseRequests } from './pages/PurchaseRequests';
@@ -17,8 +18,9 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Landing Page */}
+          {/* Public Landing & Login Pages */}
           <Route path="/landing" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
 
           {/* SaaS Application Shell */}
           <Route path="/" element={<Layout />}>

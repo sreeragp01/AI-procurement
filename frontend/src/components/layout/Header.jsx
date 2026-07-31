@@ -95,7 +95,7 @@ export const Header = () => {
             width: '34px',
             height: '34px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+            background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -106,9 +106,16 @@ export const Header = () => {
             {user.name.charAt(0)}
           </div>
           <div>
-            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#FFF' }}>{user.name}</div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>{user.name}</div>
             <div style={{ fontSize: '0.68rem', color: '#818CF8', fontWeight: 600 }}>{user.organization}</div>
           </div>
+          <button 
+            className="btn btn-secondary" 
+            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', marginLeft: '0.5rem' }}
+            onClick={() => navigate('/login')}
+          >
+            Log Out
+          </button>
         </div>
       </div>
     </header>
