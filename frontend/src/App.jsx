@@ -7,6 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import { Dashboard } from './pages/Dashboard';
 import { ApprovalCenter } from './pages/ApprovalCenter';
 import { Vendors } from './pages/Vendors';
+import { VendorPortal } from './pages/VendorPortal';
 import { PurchaseRequests } from './pages/PurchaseRequests';
 import { RFQs } from './pages/RFQs';
 import { AIQuoteComparison } from './pages/AIQuoteComparison';
@@ -31,6 +32,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="approvals" element={<ApprovalCenter />} />
             <Route path="vendors" element={<Vendors />} />
+            <Route path="vendor-portal" element={<VendorPortal />} />
             <Route path="purchase-requests" element={<PurchaseRequests />} />
             <Route path="rfqs" element={<RFQs />} />
             <Route path="ai-quote-comparison" element={<AIQuoteComparison />} />

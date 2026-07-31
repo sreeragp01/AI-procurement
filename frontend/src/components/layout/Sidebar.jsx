@@ -13,14 +13,16 @@ import {
   CheckSquare,
   PackageCheck,
   FileCheck,
-  CreditCard
+  CreditCard,
+  Building2
 } from 'lucide-react';
 
 export const Sidebar = () => {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/approvals', label: 'Approval Engine', icon: CheckSquare, badge: 'v2.0' },
+    { path: '/approvals', label: 'Approval Engine', icon: CheckSquare, badge: 'v2.5' },
     { path: '/vendors', label: 'Vendor Directory', icon: Users },
+    { path: '/vendor-portal', label: 'Supplier Portal', icon: Building2, badge: 'v4.0' },
     { path: '/purchase-requests', label: 'Purchase Requests', icon: FileText },
     { path: '/rfqs', label: 'RFQs & Bidding', icon: Send },
     { path: '/ai-quote-comparison', label: 'AI Quote Matrix', icon: Scale, badge: 'AI' },
@@ -64,7 +66,7 @@ export const Sidebar = () => {
         </div>
         <div>
           <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFF', fontFamily: 'Outfit, sans-serif' }}>ProcureAI</span>
-          <span style={{ fontSize: '0.65rem', color: '#818CF8', fontWeight: 700, display: 'block', letterSpacing: '0.05em' }}>COPILOT v2.0</span>
+          <span style={{ fontSize: '0.65rem', color: '#34D399', fontWeight: 700, display: 'block', letterSpacing: '0.05em' }}>COPILOT v4.0</span>
         </div>
       </div>
 
