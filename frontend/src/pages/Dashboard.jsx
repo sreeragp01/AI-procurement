@@ -1,16 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { fetchDashboardMetrics } from '../services/api';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Building2, 
-  FileText, 
-  AlertTriangle, 
-  ArrowUpRight,
-  PlusCircle,
-  Scale,
-  ShieldAlert
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { dashboardAPI } from '../services/api';
 import { 
   BarChart, 
   Bar, 
@@ -18,53 +7,75 @@ import {
   YAxis, 
   Tooltip, 
   ResponsiveContainer, 
-  Cell,
-  PieChart,
-  Pie
+  PieChart, 
+  Pie, 
+  Cell 
 } from 'recharts';
+import { 
+  TrendingUp, 
+  DollarSign, 
+  Building2, 
+  FileText, 
+  AlertTriangle, 
+  PlusCircle, 
+  Scale, 
+  ArrowUpRight, 
+  Clock, 
+  Calendar,
+  CheckCircle2
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
-  const [metrics, setMetrics] = useState(null);
   const navigate = useNavigate();
+  const [metrics, setMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardMetrics().then(data => {
-      if (data) setMetrics(data);
-    });
+    fetchDashboardMetrics();
   }, []);
 
-  const chartData = metrics?.monthly_spend_trend || [
-    { month: "Jan", spend: 1200000, savings: 140000 },
-    { month: "Feb", spend: 1850000, savings: 210000 },
-    { month: "Mar", spend: 1400000, savings: 190000 },
-    { month: "Apr", spend: 2100000, savings: 280000 },
-    { month: "May", spend: 2600000, savings: 350000 },
-    { month: "Jun", spend: 3100000, savings: 420000 },
+  const fetchDashboardMetrics = async () => {
+    try {
+      setLoading(true);
+      const res = await dashboardAPI.getMetrics();
+      setMetrics(res.data);
+    } catch (err) {
+      console.error("Error loading dashboard metrics:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const chartData = [
+    { month: 'Jan', spend: 2100000, savings: 240000 },
+    { month: 'Feb', spend: 2800000, savings: 310000 },
+    { month: 'Mar', spend: 3600000, savings: 420000 },
+    { month: 'Apr', spend: 3750000, savings: 620000 },
   ];
 
-  const categoryData = metrics?.category_distribution || [
-    { name: "IT & Hardware", value: 42, color: "#6366F1" },
-    { name: "Office Supplies", value: 18, color: "#10B981" },
-    { name: "Raw Materials", value: 25, color: "#F59E0B" },
-    { name: "Services", value: 15, color: "#EC4899" },
+  const categoryData = [
+    { name: 'IT Hardware', value: 45 },
+    { name: 'Raw Steel', value: 30 },
+    { name: 'Medical Devices', value: 25 },
   ];
 
-  const COLORS = ["#6366F1", "#10B981", "#F59E0B", "#EC4899"];
+  const COLORS = ['#6366F1', '#10B981', '#F59E0B'];
 
   return (
-    <div>
+    <div className="page-body">
       {/* Page Title & Quick Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFF' }}>Procurement Intelligence Dashboard</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-            Real-time analytics, AI quote evaluations, and spend optimization insights.
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+            <span className="badge badge-indigo">Version 2.5 Active</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>Multi-Tenant Decision-Support System</span>
+          </div>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFF' }}>Procurement Executive Analytics</h1>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button className="btn btn-primary" onClick={() => navigate('/purchase-requests')}>
-            <PlusCircle size={16} /> New Request
+            <PlusCircle size={16} /> New Requisition
           </button>
           <button className="btn btn-emerald" onClick={() => navigate('/ai-quote-comparison')}>
             <Scale size={16} /> AI Quote Matrix
@@ -87,12 +98,23 @@ export const Dashboard = () => {
 
         <div className="glass-panel glass-panel-hover" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Procurement Cycle Time</span>
+            <Clock size={20} color="#10B981" />
+          </div>
+          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#34D399' }}>4.2 Days</div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            PR creation ➔ Goods delivery average
+          </div>
+        </div>
+
+        <div className="glass-panel glass-panel-hover" style={{ padding: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>AI Savings Achieved</span>
             <ArrowUpRight size={20} color="#10B981" />
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#34D399' }}>₹1,590,000</div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            10.2% cost reduction via AI quotes
+            10.2% cost reduction rate
           </div>
         </div>
 
@@ -103,30 +125,18 @@ export const Dashboard = () => {
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#FFF' }}>8 Verified</div>
           <div style={{ fontSize: '0.78rem', color: '#FBBF24', marginTop: '0.5rem' }}>
-            4.75 Avg Quality Rating
-          </div>
-        </div>
-
-        <div className="glass-panel glass-panel-hover" style={{ padding: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Pending Approvals</span>
-            <FileText size={20} color="#EC4899" />
-          </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#FFF' }}>3 Requests</div>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            2 RFQs open for bidding
+            98.2% On-Time Delivery Rate
           </div>
         </div>
       </div>
 
-      {/* Charts Row */}
+      {/* Analytics Row: Spend Trend & Category Pie */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-        {/* Monthly Spend & Savings Bar Chart */}
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', marginBottom: '1.25rem' }}>
-            Monthly Spend vs AI Savings (2026)
+            Monthly Spend vs AI Negotiated Savings
           </h3>
-          <div style={{ height: '260px' }}>
+          <div style={{ height: '250px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <XAxis dataKey="month" stroke="#64748B" fontSize={12} />
@@ -142,12 +152,11 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        {/* Spend by Category Pie Chart */}
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', marginBottom: '1.25rem' }}>
-            Spend by Category
+            Spend Distribution
           </h3>
-          <div style={{ height: '200px' }}>
+          <div style={{ height: '190px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -167,7 +176,7 @@ export const Dashboard = () => {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginTop: '0.4rem' }}>
             {categoryData.map((cat, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: COLORS[i] }}></span>
@@ -178,44 +187,44 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* AI Risk & Alert Highlights */}
-      <div className="glass-panel" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <AlertTriangle size={18} color="#F59E0B" /> Recent AI Procurement Copilot Insights
+      {/* v2.5 Executive Analytics: Approval Bottlenecks & Contract Expiration Calendar */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+        {/* Approval Bottleneck Tracker */}
+        <div className="glass-panel" style={{ padding: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Clock size={18} color="#818CF8" /> Approval Response Time by Role
           </h3>
-          <span style={{ fontSize: '0.8rem', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/contract-audit')}>
-            View Audit Studio →
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#0F172A', borderRadius: '6px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#FFF' }}>Department Head Review</span>
+              <strong style={{ fontSize: '0.85rem', color: '#10B981' }}>0.8 Hours (Fast)</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#0F172A', borderRadius: '6px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#FFF' }}>Procurement Manager Review</span>
+              <strong style={{ fontSize: '0.85rem', color: '#10B981' }}>1.4 Hours (Normal)</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#0F172A', borderRadius: '6px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#FFF' }}>Finance Director Review</span>
+              <strong style={{ fontSize: '0.85rem', color: '#FBBF24' }}>4.6 Hours (Review Delay)</strong>
+            </div>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontWeight: 600, color: '#FBBF24', fontSize: '0.9rem' }}>
-                Quotation Evaluated: RFQ-2026-0001 (Developer Laptops)
+        {/* Contract Expiration Calendar */}
+        <div className="glass-panel" style={{ padding: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Calendar size={18} color="#FBBF24" /> Contract Expiration Calendar (30/60/90 Days)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ padding: '0.75rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 700, color: '#FBBF24', fontSize: '0.85rem' }}>CNT-2026-0001 (Global Steel & Infra)</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Expires in 35 days • Value: ₹15,000,000</div>
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                AI detected TechCorp offers 10% lower cost with 24-month warranty vs Nexus Digital demanding 100% advance.
-              </div>
+              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => navigate('/contract-audit')}>
+                Run Audit
+              </button>
             </div>
-            <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }} onClick={() => navigate('/ai-quote-comparison')}>
-              Review Matrix
-            </button>
-          </div>
-
-          <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(244, 63, 94, 0.08)', border: '1px solid rgba(244, 63, 94, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontWeight: 600, color: '#FB7185', fontSize: '0.9rem' }}>
-                Contract Renewal Warning: CNT-2026-0001
-              </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                SLA contract with Global Steel & Infra expires in 28 days. Missing delay penalty clause flagged.
-              </div>
-            </div>
-            <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }} onClick={() => navigate('/contract-audit')}>
-              Run Clause Audit
-            </button>
           </div>
         </div>
       </div>

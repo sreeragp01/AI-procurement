@@ -1,25 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Bell, UserCheck, Bot, Building2 } from 'lucide-react';
+import { Search, Bell, UserCheck, Bot, Building2, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { procurementAPI } from '../../services/api';
 
 export const Header = () => {
   const { user, switchRole, switchOrganization } = useAuth();
   const navigate = useNavigate();
+  const [notifications, setNotifications] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await procurementAPI.getNotifications();
+      setNotifications(res.data);
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <header style={{
       height: '70px',
       borderBottom: '1px solid var(--border-color)',
-      background: 'rgba(9, 13, 22, 0.8)',
-      backdropFilter: 'blur(10px)',
+      background: 'var(--bg-card)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 2rem',
       position: 'sticky',
       top: 0,
-      zIndex: 50
+      zIndex: 50,
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
     }}>
       {/* Search Input */}
       <div style={{ position: 'relative', width: '300px' }}>
@@ -41,7 +59,7 @@ export const Header = () => {
             value={user.organization} 
             onChange={(e) => switchOrganization(e.target.value)}
             className="form-select"
-            style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem', height: '36px', borderColor: 'rgba(99, 102, 241, 0.4)' }}
+            style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem', height: '36px' }}
           >
             <option value="Apex Global Procurement">Org: Apex Global</option>
             <option value="BioMed Health Corp">Org: BioMed Health</option>
@@ -75,18 +93,62 @@ export const Header = () => {
           <span>Ask Copilot</span>
         </button>
 
-        {/* Notifications */}
-        <div style={{ position: 'relative', cursor: 'pointer', padding: '0.45rem', borderRadius: '8px', background: 'rgba(30, 41, 59, 0.5)' }}>
-          <Bell size={18} color="var(--text-muted)" />
-          <span style={{
-            position: 'absolute',
-            top: '4px',
-            right: '4px',
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: 'var(--accent-emerald)'
-          }}></span>
+        {/* Notification Center Bell Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <div 
+            onClick={() => setShowDropdown(!showDropdown)}
+            style={{ position: 'relative', cursor: 'pointer', padding: '0.45rem', borderRadius: '8px', background: '#0F172A', border: '1px solid #1E293B' }}
+          >
+            <Bell size={18} color="#818CF8" />
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '4px',
+                right: '4px',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: 'var(--accent-rose)'
+              }}></span>
+            )}
+          </div>
+
+          {/* Notification Popup Dropdown */}
+          {showDropdown && (
+            <div className="glass-panel" style={{
+              position: 'absolute',
+              right: 0,
+              top: '48px',
+              width: '340px',
+              padding: '1rem',
+              zIndex: 100,
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid #1E293B', paddingBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#FFF' }}>Notification Center</span>
+                <span className="badge badge-indigo">{unreadCount} New</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '260px', overflowY: 'auto' }}>
+                {notifications.map((n) => (
+                  <div 
+                    key={n.id} 
+                    onClick={() => { setShowDropdown(false); navigate(n.link || '/'); }}
+                    style={{
+                      padding: '0.65rem',
+                      borderRadius: '6px',
+                      background: n.is_read ? 'transparent' : 'rgba(99, 102, 241, 0.1)',
+                      border: '1px solid #1E293B',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#FFF' }}>{n.title}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>{n.message}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Profile */}

@@ -1,8 +1,14 @@
 from django.urls import path
-from .views import AIQuoteCompareView, AIContractAuditView, AICopilotChatView
+from .views import (
+    AIQuoteCompareView,
+    AIContractAuditView,
+    AICopilotChatView,
+    AIVendorRecommendView
+)
 
 urlpatterns = [
-    path('quote-compare/<uuid:rfq_id>/', AIQuoteCompareView.as_view(), name='ai_quote_compare'),
-    path('contract-audit/', AIContractAuditView.as_view(), name='ai_contract_audit'),
-    path('chat/', AICopilotChatView.as_view(), name='ai_copilot_chat'),
+    path('quote-matrix/<uuid:rfq_id>/', AIQuoteCompareView.as_view(), name='ai-quote-matrix'),
+    path('audit-contract-risk/', AIContractAuditView.as_view(), name='ai-contract-audit'),
+    path('copilot-chat/', AICopilotChatView.as_view(), name='ai-copilot-chat'),
+    path('recommend-vendors/', AIVendorRecommendView.as_view(), name='ai-recommend-vendors'),
 ]

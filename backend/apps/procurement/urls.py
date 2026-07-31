@@ -1,15 +1,18 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    OrganizationViewSet, DepartmentViewSet, PurchaseRequestViewSet,
-    PurchaseRequestItemViewSet, ApprovalRuleViewSet, ApprovalLogViewSet,
-    RFQViewSet, VendorInvitationViewSet, PurchaseOrderViewSet,
-    GoodsReceiptViewSet, InvoiceViewSet, PaymentViewSet
+    OrganizationViewSet, DepartmentViewSet, WorkflowRuleViewSet,
+    NotificationViewSet, PurchaseRequestViewSet, PurchaseRequestItemViewSet,
+    ApprovalRuleViewSet, ApprovalLogViewSet, RFQViewSet,
+    VendorInvitationViewSet, PurchaseOrderViewSet, GoodsReceiptViewSet,
+    InvoiceViewSet, PaymentViewSet
 )
 
 router = DefaultRouter()
 router.register(r'organizations', OrganizationViewSet)
 router.register(r'departments', DepartmentViewSet)
+router.register(r'workflow-rules', WorkflowRuleViewSet)
+router.register(r'notifications', NotificationViewSet)
 router.register(r'purchase-requests', PurchaseRequestViewSet)
 router.register(r'request-items', PurchaseRequestItemViewSet)
 router.register(r'approval-rules', ApprovalRuleViewSet)

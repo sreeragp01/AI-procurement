@@ -13,7 +13,7 @@ from apps.accounts.models import User
 from apps.vendors.models import Category, Vendor
 from apps.procurement.models import (
     Organization, Department, PurchaseRequest, PurchaseRequestItem,
-    ApprovalRule, ApprovalLog, RFQ, VendorInvitation, PurchaseOrder,
+    ApprovalRule, ApprovalLog, WorkflowRule, Notification, RFQ, VendorInvitation, PurchaseOrder,
     GoodsReceipt, Invoice, Payment
 )
 from apps.quotations.models import Quotation, QuotationItem
@@ -144,9 +144,46 @@ def seed_enterprise_data():
     )
     v_steel.categories.add(cat_raw)
 
-    # 5. Approval Rules
+    # 5. Approval Rules & IF-AND-THEN Workflow Engine Rules
     ApprovalRule.objects.get_or_create(name="Manager Threshold", min_amount=0, max_amount=500000, required_role="PROCUREMENT_MANAGER")
     ApprovalRule.objects.get_or_create(name="Finance Director Threshold", min_amount=500001, max_amount=10000000, required_role="FINANCE")
+
+    WorkflowRule.objects.get_or_create(
+        rule_name="IT Hardware > 1M Multi-Stage Chain",
+        defaults={
+            "organization": org_apex,
+            "min_amount": 1000000.00,
+            "max_amount": 10000000.00,
+            "category": cat_it,
+            "department": dept_it,
+            "approval_chain": ["DEPARTMENT_HEAD", "FINANCE", "CIO"],
+            "is_active": True
+        }
+    )
+
+    # 5b. Notifications
+    Notification.objects.get_or_create(
+        title="Pending Approval: PR-2026-0001",
+        defaults={
+            "organization": org_apex,
+            "user": admin_user,
+            "message": "PR-2026-0001 (Developer Laptops) requires Manager approval for ₹3,600,000 budget.",
+            "notification_type": Notification.Type.APPROVAL_REQUIRED,
+            "is_read": False,
+            "link": "/approvals"
+        }
+    )
+    Notification.objects.get_or_create(
+        title="Contract Renewal Warning",
+        defaults={
+            "organization": org_apex,
+            "user": admin_user,
+            "message": "SLA Master Steel Contract with Global Steel expires in 35 days. Initiate renewal audit.",
+            "notification_type": Notification.Type.CONTRACT_EXPIRING,
+            "is_read": False,
+            "link": "/contract-audit"
+        }
+    )
 
     # 6. Purchase Request with Line Items
     pr, created = PurchaseRequest.objects.get_or_create(

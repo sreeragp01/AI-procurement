@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from .models import (
     Organization, Department, PurchaseRequest, PurchaseRequestItem,
-    ApprovalRule, ApprovalLog, RFQ, VendorInvitation, PurchaseOrder,
-    GoodsReceipt, Invoice, Payment
+    WorkflowRule, ApprovalRule, ApprovalLog, Notification, RFQ,
+    VendorInvitation, PurchaseOrder, GoodsReceipt, Invoice, Payment
 )
 from apps.vendors.serializers import CategorySerializer, VendorSerializer
 
@@ -28,6 +28,14 @@ class PurchaseRequestItemSerializer(serializers.ModelSerializer):
     def get_total_item_price(self, obj):
         return float(obj.quantity * obj.target_unit_price)
 
+class WorkflowRuleSerializer(serializers.ModelSerializer):
+    category_name = serializers.ReadOnlyField(source='category.name')
+    department_name = serializers.ReadOnlyField(source='department.name')
+
+    class Meta:
+        model = WorkflowRule
+        fields = '__all__'
+
 class ApprovalRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApprovalRule
@@ -43,6 +51,11 @@ class ApprovalLogSerializer(serializers.ModelSerializer):
 
     def get_approver_name(self, obj):
         return f"{obj.approver.first_name} {obj.approver.last_name}".strip() or obj.approver.email
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'
 
 class PurchaseRequestSerializer(serializers.ModelSerializer):
     category_details = CategorySerializer(source='category', read_only=True)

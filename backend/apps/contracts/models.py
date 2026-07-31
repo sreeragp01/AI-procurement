@@ -10,6 +10,7 @@ class Contract(models.Model):
         TERMINATED = 'TERMINATED', 'Terminated'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization_name = models.CharField(max_length=255, default='Apex Global Procurement')
     contract_number = models.CharField(max_length=50, unique=True)
     title = models.CharField(max_length=255)
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='contracts')
@@ -21,7 +22,7 @@ class Contract(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
     
     # AI Risk & Clause Analysis
-    ai_analysis = models.JSONField(default=dict, blank=True, help_text="AI contract assessment: missing clauses, penalty risks, renewal notice terms")
+    ai_analysis = models.JSONField(default=dict, blank=True, help_text="AI contract assessment")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

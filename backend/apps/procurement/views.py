@@ -6,14 +6,15 @@ from rest_framework.response import Response
 
 from .models import (
     Organization, Department, PurchaseRequest, PurchaseRequestItem,
-    ApprovalRule, ApprovalLog, RFQ, VendorInvitation, PurchaseOrder,
-    GoodsReceipt, Invoice, Payment
+    WorkflowRule, ApprovalRule, ApprovalLog, Notification, RFQ,
+    VendorInvitation, PurchaseOrder, GoodsReceipt, Invoice, Payment
 )
 from .serializers import (
     OrganizationSerializer, DepartmentSerializer, PurchaseRequestSerializer,
-    PurchaseRequestItemSerializer, ApprovalRuleSerializer, ApprovalLogSerializer,
-    RFQSerializer, VendorInvitationSerializer, PurchaseOrderSerializer,
-    GoodsReceiptSerializer, InvoiceSerializer, PaymentSerializer
+    PurchaseRequestItemSerializer, WorkflowRuleSerializer, ApprovalRuleSerializer,
+    ApprovalLogSerializer, NotificationSerializer, RFQSerializer,
+    VendorInvitationSerializer, PurchaseOrderSerializer, GoodsReceiptSerializer,
+    InvoiceSerializer, PaymentSerializer
 )
 from apps.vendors.models import Vendor, Category
 
@@ -27,6 +28,23 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     serializer_class = DepartmentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+class WorkflowRuleViewSet(viewsets.ModelViewSet):
+    queryset = WorkflowRule.objects.filter(is_active=True)
+    serializer_class = WorkflowRuleSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    queryset = Notification.objects.all().order_by('-created_at')
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    @action(detail=True, methods=['post'], url_path='mark-read')
+    def mark_read(self, request, pk=None):
+        notif = self.get_object()
+        notif.is_read = True
+        notif.save()
+        return Response({'status': 'read'})
+
 class PurchaseRequestViewSet(viewsets.ModelViewSet):
     queryset = PurchaseRequest.objects.all().order_by('-created_at')
     serializer_class = PurchaseRequestSerializer
@@ -38,10 +56,16 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         comments = request.data.get('comments', 'Approved by Manager')
 
-        pr.status = PurchaseRequest.Status.APPROVED
+        # IF-AND-THEN Workflow Chain Evaluation
+        if float(pr.total_budget) > 1000000.00 and pr.status == PurchaseRequest.Status.PENDING_MANAGER:
+            pr.status = PurchaseRequest.Status.PENDING_FINANCE
+            msg = f"Purchase Request {pr.request_number} passed Manager review, pending Finance Director approval."
+        else:
+            pr.status = PurchaseRequest.Status.APPROVED
+            msg = f"Purchase Request {pr.request_number} approved successfully."
+        
         pr.save()
 
-        # Log approval
         if user and user.is_authenticated:
             ApprovalLog.objects.create(
                 purchase_request=pr,
@@ -50,7 +74,7 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
                 comments=comments
             )
 
-        return Response({'message': f'Purchase Request {pr.request_number} approved successfully.', 'status': pr.status})
+        return Response({'message': msg, 'status': pr.status})
 
     @action(detail=True, methods=['post'], url_path='reject')
     def reject(self, request, pk=None):
@@ -77,7 +101,6 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
         if pr.status != PurchaseRequest.Status.APPROVED:
             return Response({'error': 'Purchase Request must be APPROVED before generating an RFQ'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create RFQ
         deadline = timezone.now() + timedelta(days=7)
         rfq = RFQ.objects.create(
             purchase_request=pr,
@@ -85,7 +108,6 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
             terms_and_conditions="Standard 30-day payment terms, GST included, minimum 12-month warranty."
         )
 
-        # Auto-invite vendors matching category
         matching_vendors = Vendor.objects.filter(categories=pr.category, status=Vendor.Status.ACTIVE)
         for vendor in matching_vendors:
             VendorInvitation.objects.create(rfq=rfq, vendor=vendor, status=VendorInvitation.Status.INVITED)

@@ -4,7 +4,8 @@ from rest_framework import status, permissions
 from .services import (
     generate_quote_comparison_matrix,
     audit_contract_risk,
-    copilot_rag_query
+    copilot_rag_query,
+    recommend_vendors_for_rfq
 )
 
 class AIQuoteCompareView(APIView):
@@ -33,3 +34,14 @@ class AICopilotChatView(APIView):
         
         reply = copilot_rag_query(user_query)
         return Response({'query': user_query, 'reply': reply}, status=status.HTTP_200_OK)
+
+class AIVendorRecommendView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def post(self, request):
+        rfq_id = request.data.get('rfq_id')
+        if not rfq_id:
+            return Response({'error': 'rfq_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        result = recommend_vendors_for_rfq(rfq_id)
+        return Response(result, status=status.HTTP_200_OK)

@@ -26,6 +26,7 @@ class Vendor(models.Model):
         HIGH = 'HIGH', 'High Risk'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization_name = models.CharField(max_length=255, default='Apex Global Procurement')
     company_name = models.CharField(max_length=255)
     contact_person = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -39,15 +40,14 @@ class Vendor(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
     is_preferred = models.BooleanField(default=False, help_text="Preferred supplier for fast-track RFQs")
     
-    # Enhanced Performance & Risk Metrics
     on_time_delivery_rate = models.DecimalField(max_digits=5, decimal_places=2, default=95.00, help_text="On-time delivery percentage")
     quality_score = models.DecimalField(max_digits=5, decimal_places=2, default=96.50, help_text="Inspected quality pass rate percentage")
     risk_level = models.CharField(max_length=20, choices=RiskLevel.choices, default=RiskLevel.LOW)
-    certifications = models.JSONField(default=list, blank=True, help_text="List of certifications e.g. ['ISO 9001', 'SOC2', 'GMP']")
-    bank_details_encrypted = models.JSONField(default=dict, blank=True, help_text="Secure bank account & IFSC / IBAN details")
+    certifications = models.JSONField(default=list, blank=True, help_text="List of certifications")
+    bank_details_encrypted = models.JSONField(default=dict, blank=True)
     
     categories = models.ManyToManyField(Category, related_name='vendors')
-    ai_performance_score = models.JSONField(default=dict, blank=True, help_text="Stores AI vendor scoring breakdown")
+    ai_performance_score = models.JSONField(default=dict, blank=True)
     is_verified = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

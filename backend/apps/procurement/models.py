@@ -32,11 +32,13 @@ class PurchaseRequest(models.Model):
         DRAFT = 'DRAFT', 'Draft'
         PENDING_MANAGER = 'PENDING_MANAGER', 'Pending Manager Approval'
         PENDING_FINANCE = 'PENDING_FINANCE', 'Pending Finance Approval'
+        PENDING_CIO = 'PENDING_CIO', 'Pending CIO Approval'
         APPROVED = 'APPROVED', 'Approved'
         REJECTED = 'REJECTED', 'Rejected'
         RFQ_CREATED = 'RFQ_CREATED', 'RFQ Created'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='purchase_requests', null=True, blank=True)
     request_number = models.CharField(max_length=50, unique=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='purchase_requests')
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='purchase_requests')
@@ -79,6 +81,24 @@ class PurchaseRequestItem(models.Model):
     def __str__(self):
         return f"{self.item_name} (x{self.quantity} {self.unit_of_measure}) for {self.purchase_request.request_number}"
 
+class WorkflowRule(models.Model):
+    """
+    Configurable IF-AND-THEN Workflow Rule Engine Model
+    Example: IF Amount > 1,000,000 AND Category = IT -> Require Chain ["DEPARTMENT_HEAD", "FINANCE", "CIO"]
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='workflow_rules', null=True, blank=True)
+    rule_name = models.CharField(max_length=150)
+    min_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    max_amount = models.DecimalField(max_digits=12, decimal_places=2, default=10000000.00)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    approval_chain = models.JSONField(default=list, help_text="Ordered list of required roles e.g. ['DEPARTMENT_HEAD', 'FINANCE', 'CIO']")
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Workflow: {self.rule_name} (₹{self.min_amount:,.0f} - ₹{self.max_amount:,.0f})"
+
 class ApprovalRule(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
@@ -105,6 +125,30 @@ class ApprovalLog(models.Model):
     def __str__(self):
         return f"{self.approver.email} {self.action} {self.purchase_request.request_number}"
 
+class Notification(models.Model):
+    """
+    In-App Notification Center Model
+    """
+    class Type(models.TextChoices):
+        APPROVAL_REQUIRED = 'APPROVAL_REQUIRED', 'Approval Required'
+        RFQ_BID_DISPATCHED = 'RFQ_BID_DISPATCHED', 'RFQ Bid Dispatched'
+        GRN_INSPECTION = 'GRN_INSPECTION', 'GRN Inspection'
+        CONTRACT_EXPIRING = 'CONTRACT_EXPIRING', 'Contract Expiring Soon'
+        PRICE_ANOMALY = 'PRICE_ANOMALY', 'Price Anomaly Alert'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    notification_type = models.CharField(max_length=30, choices=Type.choices, default=Type.APPROVAL_REQUIRED)
+    is_read = models.BooleanField(default=False)
+    link = models.CharField(max_length=255, default='/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Alert: {self.title} ({'READ' if self.is_read else 'UNREAD'})"
+
 class RFQ(models.Model):
     class Status(models.TextChoices):
         DRAFT = 'DRAFT', 'Draft'
@@ -114,6 +158,7 @@ class RFQ(models.Model):
         CLOSED = 'CLOSED', 'Closed'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='rfqs', null=True, blank=True)
     rfq_number = models.CharField(max_length=50, unique=True)
     purchase_request = models.ForeignKey(PurchaseRequest, on_delete=models.CASCADE, related_name='rfqs')
     invited_vendors = models.ManyToManyField(Vendor, through='VendorInvitation', related_name='rfqs_invited')
@@ -165,6 +210,7 @@ class PurchaseOrder(models.Model):
         CANCELLED = 'CANCELLED', 'Cancelled'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='purchase_orders', null=True, blank=True)
     po_number = models.CharField(max_length=50, unique=True)
     rfq = models.ForeignKey(RFQ, on_delete=models.CASCADE, related_name='purchase_orders')
     selected_vendor = models.ForeignKey(Vendor, on_delete=models.PROTECT, related_name='purchase_orders')
@@ -197,7 +243,7 @@ class GoodsReceipt(models.Model):
     received_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     received_date = models.DateField(auto_now_add=True)
     inspection_status = models.CharField(max_length=20, choices=InspectionStatus.choices, default=InspectionStatus.PASSED)
-    received_items = models.JSONField(default=list, help_text="List of inspected line items: [{ item_name, qty_ordered, qty_received, qty_accepted, notes }]")
+    received_items = models.JSONField(default=list, help_text="List of inspected line items")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -247,7 +293,7 @@ class Payment(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending Payment'
         COMPLETED = 'COMPLETED', 'Payment Cleared'
-        FAILED = 'FAILED', 'Payment Failed'
+        FAILED = 'FAILED', 'Failed'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     payment_number = models.CharField(max_length=50, unique=True)

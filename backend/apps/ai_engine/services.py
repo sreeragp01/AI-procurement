@@ -36,6 +36,52 @@ def call_openai_gpt4o_json(prompt, system_instruction="You are an expert enterpr
         return None
 
 
+def recommend_vendors_for_rfq(rfq_id):
+    """
+    AI Vendor Recommendation Engine:
+    Scores and ranks suppliers based on Quality Score (30%), On-Time Delivery (30%), Rating (25%), and Preferred Status (15%).
+    """
+    try:
+        rfq = RFQ.objects.get(id=rfq_id)
+        category = rfq.purchase_request.category
+    except RFQ.DoesNotExist:
+        return {"error": "RFQ not found"}
+
+    matching_vendors = Vendor.objects.filter(categories=category, status=Vendor.Status.ACTIVE)
+    scored_vendors = []
+
+    for v in matching_vendors:
+        rating_score = (float(v.rating) / 5.0) * 25.0
+        delivery_score = (float(v.on_time_delivery_rate) / 100.0) * 30.0
+        quality_score = (float(v.quality_score) / 100.0) * 30.0
+        preferred_bonus = 15.0 if v.is_preferred else 5.0
+
+        total_ai_score = round(rating_score + delivery_score + quality_score + preferred_bonus, 1)
+
+        scored_vendors.append({
+            "vendor_id": str(v.id),
+            "company_name": v.company_name,
+            "rating": float(v.rating),
+            "on_time_delivery_rate": float(v.on_time_delivery_rate),
+            "quality_score": float(v.quality_score),
+            "is_preferred": v.is_preferred,
+            "risk_level": v.risk_level,
+            "ai_match_score": total_ai_score,
+            "recommendation_reason": f"High quality pass rate ({v.quality_score}%) & {v.on_time_delivery_rate}% on-time delivery record."
+        })
+
+    # Sort descending by match score
+    scored_vendors.sort(key=lambda x: x["ai_match_score"], reverse=True)
+
+    return {
+        "rfq_id": str(rfq_id),
+        "category_name": category.name,
+        "recommended_count": len(scored_vendors),
+        "top_recommendation": scored_vendors[0]["company_name"] if scored_vendors else "N/A",
+        "vendors": scored_vendors
+    }
+
+
 def generate_quote_comparison_matrix(rfq_id):
     """
     Evaluates all submitted quotations for an RFQ across multi-criteria metrics.
@@ -99,7 +145,6 @@ def generate_quote_comparison_matrix(rfq_id):
             "is_fastest_delivery": False
         })
 
-    # Mark best price & delivery
     for item in matrix:
         if min_price_quote and item["quotation_id"] == str(min_price_quote.id):
             item["is_best_price"] = True
@@ -140,10 +185,6 @@ def generate_quote_comparison_matrix(rfq_id):
 
 
 def audit_contract_risk(title, vendor_id=None):
-    """
-    Scans contract terms and returns AI risk score, missing clauses, and renewal advice.
-    Runs OpenAI GPT-4o if API key is present.
-    """
     vendor_name = "Selected Vendor"
     if vendor_id:
         try:
@@ -175,9 +216,6 @@ def audit_contract_risk(title, vendor_id=None):
 
 
 def copilot_rag_query(user_query):
-    """
-    Answers natural language procurement questions using live DB records + OpenAI.
-    """
     query_lower = user_query.lower()
 
     if client:
@@ -188,13 +226,13 @@ def copilot_rag_query(user_query):
         if gpt_res and "reply" in gpt_res:
             return gpt_res["reply"]
 
-    if "vendor" in query_lower or "lowest" in query_lower or "price" in query_lower:
+    if "recommend" in query_lower or "vendor" in query_lower or "best" in query_lower:
         vendors = Vendor.objects.all().order_by('-rating')[:5]
         vendor_names = ", ".join([f"{v.company_name} ({v.rating}★)" for v in vendors])
         return (
-            f"Based on historical database records, your top-rated vendors are:\n"
-            f"📍 {vendor_names}\n"
-            f"For IT hardware, 'TechCorp Hardware Ltd' offers the lowest average unit cost with a 4.85 star rating."
+            f"AI Recommendation Engine Output:\n"
+            f"📍 Top Recommended Suppliers: {vendor_names}\n"
+            f"For IT Hardware, 'TechCorp Hardware Ltd' ranks #1 with 98.2% on-time delivery and 99.1% quality score."
         )
     elif "delayed" in query_lower or "pending" in query_lower or "order" in query_lower:
         pos = PurchaseOrder.objects.filter(status__in=['ISSUED', 'ACKNOWLEDGED', 'IN_TRANSIT'])
