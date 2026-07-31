@@ -7,6 +7,7 @@ from .services import (
     copilot_rag_query,
     recommend_vendors_for_rfq
 )
+from .forecasting import get_spend_forecasting_and_anomalies
 
 class AIQuoteCompareView(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -44,4 +45,11 @@ class AIVendorRecommendView(APIView):
             return Response({'error': 'rfq_id is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         result = recommend_vendors_for_rfq(rfq_id)
+        return Response(result, status=status.HTTP_200_OK)
+
+class AISpendForecastingView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        result = get_spend_forecasting_and_anomalies()
         return Response(result, status=status.HTTP_200_OK)

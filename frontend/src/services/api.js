@@ -94,6 +94,7 @@ export const aiAPI = {
   auditContractRisk: (title, vendorId) => customFetch('/ai/audit-contract-risk/', { method: 'POST', body: JSON.stringify({ title, vendor_id: vendorId }) }),
   copilotChat: (query) => customFetch('/ai/copilot-chat/', { method: 'POST', body: JSON.stringify({ query }) }),
   recommendVendors: (rfqId) => customFetch('/ai/recommend-vendors/', { method: 'POST', body: JSON.stringify({ rfq_id: rfqId }) }),
+  getSpendForecasting: () => customFetch('/ai/spend-forecasting/'),
 };
 
 export const dashboardAPI = {

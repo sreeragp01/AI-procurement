@@ -3,7 +3,8 @@ from .views import (
     AIQuoteCompareView,
     AIContractAuditView,
     AICopilotChatView,
-    AIVendorRecommendView
+    AIVendorRecommendView,
+    AISpendForecastingView
 )
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('audit-contract-risk/', AIContractAuditView.as_view(), name='ai-contract-audit'),
     path('copilot-chat/', AICopilotChatView.as_view(), name='ai-copilot-chat'),
     path('recommend-vendors/', AIVendorRecommendView.as_view(), name='ai-recommend-vendors'),
+    path('spend-forecasting/', AISpendForecastingView.as_view(), name='ai-spend-forecasting'),
 ]

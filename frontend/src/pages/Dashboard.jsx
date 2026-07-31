@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardAPI } from '../services/api';
+import { dashboardAPI, aiAPI } from '../services/api';
 import { 
   BarChart, 
   Bar, 
@@ -22,6 +22,8 @@ import {
   ArrowUpRight, 
   Clock, 
   Calendar,
+  Sparkles,
+  ShieldAlert,
   CheckCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -29,10 +31,12 @@ import { useNavigate } from 'react-router-dom';
 export const Dashboard = () => {
   const navigate = useNavigate();
   const [metrics, setMetrics] = useState(null);
+  const [forecast, setForecast] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardMetrics();
+    fetchAIForecast();
   }, []);
 
   const fetchDashboardMetrics = async () => {
@@ -44,6 +48,17 @@ export const Dashboard = () => {
       console.error("Error loading dashboard metrics:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAIForecast = async () => {
+    try {
+      const res = await aiAPI.getSpendForecasting();
+      if (res && res.data) {
+        setForecast(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching AI spend forecast:", err);
     }
   };
 
@@ -68,8 +83,8 @@ export const Dashboard = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-            <span className="badge badge-indigo">Version 2.5 Active</span>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>Multi-Tenant Decision-Support System</span>
+            <span className="badge badge-emerald">Version 3.0 Active</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>AI Intelligence & Predictive Analytics Engine</span>
           </div>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFF' }}>Procurement Executive Analytics</h1>
         </div>
@@ -130,6 +145,47 @@ export const Dashboard = () => {
         </div>
       </div>
 
+      {/* v3.0 Feature: AI Spend Forecasting & Duplicate Anomaly Detector */}
+      {forecast && (
+        <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+            <Sparkles size={22} color="#818CF8" />
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>AI Predictive Spend Forecasting & Anomaly Alerts</h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ padding: '0.85rem', background: '#0F172A', borderRadius: '8px', border: '1px solid #1E293B' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Projected Q3 2026 Spend</div>
+              <strong style={{ fontSize: '1.2rem', color: '#818CF8' }}>₹{forecast.forecast_q3_2026.toLocaleString()}</strong>
+            </div>
+
+            <div style={{ padding: '0.85rem', background: '#0F172A', borderRadius: '8px', border: '1px solid #1E293B' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Projected Q4 2026 Spend</div>
+              <strong style={{ fontSize: '1.2rem', color: '#34D399' }}>₹{forecast.forecast_q4_2026.toLocaleString()}</strong>
+            </div>
+
+            <div style={{ padding: '0.85rem', background: '#0F172A', borderRadius: '8px', border: '1px solid #1E293B' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Anomalies Flagged</div>
+              <strong style={{ fontSize: '1.2rem', color: '#F87171' }}>{forecast.anomalies_detected_count} High-Priority Alerts</strong>
+            </div>
+          </div>
+
+          {forecast.anomalies && forecast.anomalies.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {forecast.anomalies.map((item, idx) => (
+                <div key={idx} style={{ padding: '0.75rem 1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <ShieldAlert size={20} color="#F87171" />
+                  <div>
+                    <strong style={{ fontSize: '0.85rem', color: '#FFF' }}>{item.title}</strong>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{item.details}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Analytics Row: Spend Trend & Category Pie */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
@@ -183,48 +239,6 @@ export const Dashboard = () => {
                 {cat.name} ({cat.value}%)
               </div>
             ))}
-          </div>
-        </div>
-      </div>
-
-      {/* v2.5 Executive Analytics: Approval Bottlenecks & Contract Expiration Calendar */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-        {/* Approval Bottleneck Tracker */}
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Clock size={18} color="#818CF8" /> Approval Response Time by Role
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#0F172A', borderRadius: '6px' }}>
-              <span style={{ fontSize: '0.85rem', color: '#FFF' }}>Department Head Review</span>
-              <strong style={{ fontSize: '0.85rem', color: '#10B981' }}>0.8 Hours (Fast)</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#0F172A', borderRadius: '6px' }}>
-              <span style={{ fontSize: '0.85rem', color: '#FFF' }}>Procurement Manager Review</span>
-              <strong style={{ fontSize: '0.85rem', color: '#10B981' }}>1.4 Hours (Normal)</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#0F172A', borderRadius: '6px' }}>
-              <span style={{ fontSize: '0.85rem', color: '#FFF' }}>Finance Director Review</span>
-              <strong style={{ fontSize: '0.85rem', color: '#FBBF24' }}>4.6 Hours (Review Delay)</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* Contract Expiration Calendar */}
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Calendar size={18} color="#FBBF24" /> Contract Expiration Calendar (30/60/90 Days)
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ padding: '0.75rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 700, color: '#FBBF24', fontSize: '0.85rem' }}>CNT-2026-0001 (Global Steel & Infra)</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Expires in 35 days • Value: ₹15,000,000</div>
-              </div>
-              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => navigate('/contract-audit')}>
-                Run Audit
-              </button>
-            </div>
           </div>
         </div>
       </div>
