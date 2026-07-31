@@ -134,7 +134,7 @@ export const AIQuoteComparison = () => {
             <span className="badge badge-indigo">AI Unique Feature</span>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>Evaluating RFQ-2026-0001</span>
           </div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)' }}>AI Multi-Criteria Quote Comparison</h1>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFF' }}>AI Multi-Criteria Quote Comparison</h1>
         </div>
         
         <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -162,8 +162,8 @@ export const AIQuoteComparison = () => {
       <div className="glass-panel" style={{
         padding: '1.5rem',
         marginBottom: '2rem',
-        background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%)',
-        border: '1px solid rgba(37, 99, 235, 0.25)',
+        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%)',
+        border: '1px solid rgba(99, 102, 241, 0.3)',
         borderRadius: 'var(--radius-md)'
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
@@ -171,7 +171,7 @@ export const AIQuoteComparison = () => {
             width: '46px',
             height: '46px',
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, #2563EB 0%, #10B981 100%)',
+            background: 'linear-gradient(135deg, #6366F1 0%, #10B981 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -182,7 +182,7 @@ export const AIQuoteComparison = () => {
 
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>AI Executive Recommendation</h2>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>AI Executive Recommendation</h2>
               <span className="badge badge-emerald">Optimal Cost-Risk Balance</span>
             </div>
             
@@ -225,7 +225,7 @@ export const AIQuoteComparison = () => {
 
             {/* Vendor Name */}
             <div style={{ marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>{q.vendor_name}</h3>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>{q.vendor_name}</h3>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem' }}>
                 ⭐ {q.vendor_rating} / 5.0 Rating • Verified Supplier
               </div>
@@ -236,44 +236,44 @@ export const AIQuoteComparison = () => {
               <div style={{
                 padding: '0.85rem 1rem',
                 borderRadius: 'var(--radius-sm)',
-                background: q.is_best_price ? 'rgba(16, 185, 129, 0.12)' : '#F8FAFC',
+                background: q.is_best_price ? 'rgba(16, 185, 129, 0.12)' : 'rgba(30, 41, 59, 0.6)',
                 border: q.is_best_price ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-color)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Quoted Price</span>
-                <strong style={{ fontSize: '1.3rem', fontWeight: 800, color: q.is_best_price ? '#047857' : 'var(--text-main)' }}>
+                <strong style={{ fontSize: '1.3rem', fontWeight: 800, color: q.is_best_price ? '#34D399' : '#FFF' }}>
                   ₹{q.total_price.toLocaleString()}
                 </strong>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div style={{ padding: '0.75rem', background: '#F8FAFC', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <div style={{ padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Delivery Lead Time</div>
-                  <strong style={{ fontSize: '1rem', color: q.is_fastest_delivery ? '#2563EB' : 'var(--text-main)' }}>
+                  <strong style={{ fontSize: '1rem', color: q.is_fastest_delivery ? '#818CF8' : '#FFF' }}>
                     {q.delivery_days} Days
                   </strong>
                 </div>
 
-                <div style={{ padding: '0.75rem', background: '#F8FAFC', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <div style={{ padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Warranty Period</div>
-                  <strong style={{ fontSize: '1rem', color: 'var(--text-main)' }}>
+                  <strong style={{ fontSize: '1rem', color: '#FFF' }}>
                     {q.warranty_months} Months
                   </strong>
                 </div>
               </div>
 
-              <div style={{ padding: '0.75rem', background: '#F8FAFC', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Payment Terms</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>{q.payment_terms}</div>
+                <div style={{ fontSize: '0.85rem', color: '#FFF', fontWeight: 600 }}>{q.payment_terms}</div>
               </div>
             </div>
 
             {/* AI Risk Assessment */}
-            <div style={{ background: q.risk_level === 'HIGH' ? 'rgba(225, 29, 72, 0.08)' : 'rgba(16, 185, 129, 0.08)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: q.risk_level === 'HIGH' ? '1px solid rgba(225, 29, 72, 0.25)' : '1px solid rgba(16, 185, 129, 0.25)' }}>
+            <div style={{ background: q.risk_level === 'HIGH' ? 'rgba(244, 63, 94, 0.08)' : 'rgba(16, 185, 129, 0.08)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: q.risk_level === 'HIGH' ? '1px solid rgba(244, 63, 94, 0.25)' : '1px solid rgba(16, 185, 129, 0.25)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>AI Risk Evaluation</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#FFF' }}>AI Risk Evaluation</span>
                 <span className={`badge ${q.risk_level === 'HIGH' ? 'badge-rose' : 'badge-emerald'}`}>
                   {q.risk_level} RISK
                 </span>

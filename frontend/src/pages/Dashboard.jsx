@@ -57,7 +57,7 @@ export const Dashboard = () => {
       {/* Page Title & Quick Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)' }}>Procurement Intelligence Dashboard</h1>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFF' }}>Procurement Intelligence Dashboard</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
             Real-time analytics, AI quote evaluations, and spend optimization insights.
           </p>
@@ -77,10 +77,10 @@ export const Dashboard = () => {
         <div className="glass-panel glass-panel-hover" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Total YTD Spend</span>
-            <DollarSign size={20} color="#2563EB" />
+            <DollarSign size={20} color="#6366F1" />
           </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)' }}>₹12,250,000</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', color: '#059669', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#FFF' }}>₹12,250,000</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', color: '#34D399', marginTop: '0.5rem' }}>
             <TrendingUp size={14} /> +12.4% vs last quarter
           </div>
         </div>
@@ -90,7 +90,7 @@ export const Dashboard = () => {
             <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>AI Savings Achieved</span>
             <ArrowUpRight size={20} color="#10B981" />
           </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#059669' }}>₹1,590,000</div>
+          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#34D399' }}>₹1,590,000</div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
             10.2% cost reduction via AI quotes
           </div>
@@ -99,10 +99,10 @@ export const Dashboard = () => {
         <div className="glass-panel glass-panel-hover" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Active Vendors</span>
-            <Building2 size={20} color="#D97706" />
+            <Building2 size={20} color="#F59E0B" />
           </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)' }}>8 Verified</div>
-          <div style={{ fontSize: '0.78rem', color: '#B45309', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#FFF' }}>8 Verified</div>
+          <div style={{ fontSize: '0.78rem', color: '#FBBF24', marginTop: '0.5rem' }}>
             4.75 Avg Quality Rating
           </div>
         </div>
@@ -110,9 +110,9 @@ export const Dashboard = () => {
         <div className="glass-panel glass-panel-hover" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Pending Approvals</span>
-            <FileText size={20} color="#E11D48" />
+            <FileText size={20} color="#EC4899" />
           </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)' }}>3 Requests</div>
+          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#FFF' }}>3 Requests</div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
             2 RFQs open for bidding
           </div>
@@ -123,7 +123,7 @@ export const Dashboard = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
         {/* Monthly Spend & Savings Bar Chart */}
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', marginBottom: '1.25rem' }}>
             Monthly Spend vs AI Savings (2026)
           </h3>
           <div style={{ height: '260px' }}>
@@ -132,10 +132,10 @@ export const Dashboard = () => {
                 <XAxis dataKey="month" stroke="#64748B" fontSize={12} />
                 <YAxis stroke="#64748B" fontSize={12} tickFormatter={(val) => `₹${val / 100000}L`} />
                 <Tooltip 
-                  contentStyle={{ background: '#FFFFFF', borderColor: '#E2E8F0', borderRadius: '8px', color: '#0F172A', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
+                  contentStyle={{ background: '#0F172A', borderColor: '#334155', borderRadius: '8px', color: '#FFF' }} 
                   formatter={(value) => [`₹${value.toLocaleString()}`, '']}
                 />
-                <Bar dataKey="spend" name="Monthly Spend" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="spend" name="Monthly Spend" fill="#6366F1" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="savings" name="Cost Savings" fill="#10B981" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -144,7 +144,7 @@ export const Dashboard = () => {
 
         {/* Spend by Category Pie Chart */}
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', marginBottom: '1.25rem' }}>
             Spend by Category
           </h3>
           <div style={{ height: '200px' }}>
@@ -163,7 +163,7 @@ export const Dashboard = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#FFFFFF', borderColor: '#E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                <Tooltip contentStyle={{ background: '#0F172A', borderColor: '#334155', borderRadius: '8px' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -181,8 +181,8 @@ export const Dashboard = () => {
       {/* AI Risk & Alert Highlights */}
       <div className="glass-panel" style={{ padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <AlertTriangle size={18} color="#D97706" /> Recent AI Procurement Copilot Insights
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFF', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <AlertTriangle size={18} color="#F59E0B" /> Recent AI Procurement Copilot Insights
           </h3>
           <span style={{ fontSize: '0.8rem', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/contract-audit')}>
             View Audit Studio →
@@ -190,9 +190,9 @@ export const Dashboard = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(217, 119, 6, 0.08)', border: '1px solid rgba(217, 119, 6, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: 600, color: '#B45309', fontSize: '0.9rem' }}>
+              <div style={{ fontWeight: 600, color: '#FBBF24', fontSize: '0.9rem' }}>
                 Quotation Evaluated: RFQ-2026-0001 (Developer Laptops)
               </div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
@@ -204,9 +204,9 @@ export const Dashboard = () => {
             </button>
           </div>
 
-          <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(225, 29, 72, 0.08)', border: '1px solid rgba(225, 29, 72, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(244, 63, 94, 0.08)', border: '1px solid rgba(244, 63, 94, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: 600, color: '#BE123C', fontSize: '0.9rem' }}>
+              <div style={{ fontWeight: 600, color: '#FB7185', fontSize: '0.9rem' }}>
                 Contract Renewal Warning: CNT-2026-0001
               </div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
