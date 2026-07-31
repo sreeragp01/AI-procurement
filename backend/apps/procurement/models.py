@@ -21,6 +21,19 @@ class Department(models.Model):
     def __str__(self):
         return f"{self.name} ({self.organization.name if self.organization else 'General'})"
 
+class DocumentSequence(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='sequences', null=True, blank=True)
+    prefix = models.CharField(max_length=20)
+    year = models.IntegerField(default=2026)
+    last_number = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('prefix', 'year', 'organization')
+
+    def __str__(self):
+        return f"Seq {self.prefix}-{self.year}: {self.last_number}"
+
 class PurchaseRequest(models.Model):
     class Priority(models.TextChoices):
         LOW = 'LOW', 'Low'
@@ -56,8 +69,8 @@ class PurchaseRequest(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.request_number:
-            count = PurchaseRequest.objects.count() + 1
-            self.request_number = f"PR-2026-{count:04d}"
+            from apps.services.sequence_service import generate_document_number
+            self.request_number = generate_document_number('PR', self.organization)
         super().save(*args, **kwargs)
 
     def recalculate_total_budget(self):
@@ -172,8 +185,8 @@ class RFQ(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.rfq_number:
-            count = RFQ.objects.count() + 1
-            self.rfq_number = f"RFQ-2026-{count:04d}"
+            from apps.services.sequence_service import generate_document_number
+            self.rfq_number = generate_document_number('RFQ', self.organization)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -224,8 +237,8 @@ class PurchaseOrder(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.po_number:
-            count = PurchaseOrder.objects.count() + 1
-            self.po_number = f"PO-2026-{count:04d}"
+            from apps.services.sequence_service import generate_document_number
+            self.po_number = generate_document_number('PO', self.organization)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -248,8 +261,8 @@ class GoodsReceipt(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.grn_number:
-            count = GoodsReceipt.objects.count() + 1
-            self.grn_number = f"GRN-2026-{count:04d}"
+            from apps.services.sequence_service import generate_document_number
+            self.grn_number = generate_document_number('GRN', getattr(self.purchase_order, 'organization', None))
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -276,8 +289,8 @@ class Invoice(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.invoice_number:
-            count = Invoice.objects.count() + 1
-            self.invoice_number = f"INV-2026-{count:04d}"
+            from apps.services.sequence_service import generate_document_number
+            self.invoice_number = generate_document_number('INV', getattr(self.purchase_order, 'organization', None))
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -306,8 +319,8 @@ class Payment(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.payment_number:
-            count = Payment.objects.count() + 1
-            self.payment_number = f"PAY-2026-{count:04d}"
+            from apps.services.sequence_service import generate_document_number
+            self.payment_number = generate_document_number('PAY', None)
         super().save(*args, **kwargs)
 
     def __str__(self):

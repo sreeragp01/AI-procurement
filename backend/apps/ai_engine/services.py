@@ -145,11 +145,13 @@ def generate_quote_comparison_matrix(rfq_id):
             "is_fastest_delivery": False
         })
 
+    from apps.services.explainability import generate_explainability_metadata
     for item in matrix:
         if min_price_quote and item["quotation_id"] == str(min_price_quote.id):
             item["is_best_price"] = True
         if min_delivery_quote and item["quotation_id"] == str(min_delivery_quote.id):
             item["is_fastest_delivery"] = True
+        item["explainability"] = generate_explainability_metadata(item)
 
     best_overall = min_price_quote if min_price_quote else quotes.first()
 

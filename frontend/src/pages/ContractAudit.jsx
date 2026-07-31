@@ -59,8 +59,55 @@ export const ContractAudit = () => {
         </button>
       </div>
 
-      {/* Main Audit Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+      {/* Split-Screen Document Intelligence Verification Studio (v3.0 Feature) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+        {/* Left Panel: Raw Document PDF Preview */}
+        <div className="glass-panel" style={{ padding: '1.5rem', background: '#0F172A', border: '1px solid var(--border-glow)', height: '620px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid #1E293B' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FileText size={20} color="#818CF8" />
+              <strong style={{ color: '#FFF', fontSize: '0.95rem' }}>Original Contract PDF Preview</strong>
+            </div>
+            <span className="badge badge-indigo">Page 1 of 8</span>
+          </div>
+
+          {/* PDF Viewer Mock Container */}
+          <div style={{
+            flex: 1,
+            background: '#1E293B',
+            borderRadius: '8px',
+            padding: '1.5rem',
+            overflowY: 'auto',
+            fontFamily: 'monospace',
+            fontSize: '0.82rem',
+            lineHeight: 1.6,
+            color: '#CBD5E1',
+            border: '1px solid #334155'
+          }}>
+            <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1rem', color: '#FFF', marginBottom: '1rem' }}>
+              MASTER EQUIPMENT SUPPLY & SLA AGREEMENT
+            </div>
+            <p><strong>THIS AGREEMENT</strong> is made as of 1st day of August, 2026, by and between Apex Global Procurement ("Purchaser") and Global Steel & Infra Supplies ("Supplier").</p>
+            
+            <div style={{ background: 'rgba(239, 68, 68, 0.15)', borderLeft: '3px solid #EF4444', padding: '0.5rem', margin: '0.75rem 0', borderRadius: '4px' }}>
+              <strong>SECTION 4. DELIVERIES & SCHEDULE:</strong><br/>
+              Supplier agrees to deliver all equipment within 14 calendar days from PO dispatch date. (Note: No delay penalty clause present in raw contract text).
+            </div>
+
+            <div style={{ background: 'rgba(245, 158, 11, 0.15)', borderLeft: '3px solid #F59E0B', padding: '0.5rem', margin: '0.75rem 0', borderRadius: '4px' }}>
+              <strong>SECTION 9. INTELLECTUAL PROPERTY:</strong><br/>
+              Custom tooling and firmware design artifacts created under this PO shall be shared between both parties.
+            </div>
+
+            <p><strong>SECTION 12. WARRANTY & MAINTENANCE:</strong><br/>
+            Supplier guarantees a 24-month comprehensive replacement warranty for all structural defects starting from inspection signoff date.</p>
+
+            <p><strong>SECTION 15. PAYMENT TERMS:</strong><br/>
+            Payment shall be made via Net 30 Days bank transfer following 3-way matching of Purchase Order, Goods Receipt Note, and Tax Invoice.</p>
+          </div>
+        </div>
+
+        {/* Right Panel: AI Extracted Risk & Verification Studio */}
         {/* Left Score Card */}
         <div className="glass-panel" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           <div style={{

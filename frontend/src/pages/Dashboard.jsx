@@ -98,6 +98,84 @@ export const Dashboard = () => {
         </div>
       </div>
 
+      {/* Executive Procurement Health Scorecard (v5.0 OS Feature) */}
+      <div className="glass-panel" style={{ 
+        padding: '1.5rem', 
+        marginBottom: '2rem', 
+        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%)', 
+        border: '1px solid rgba(99, 102, 241, 0.35)', 
+        borderRadius: '16px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+            {/* Score Radial Badge */}
+            <div style={{
+              width: '72px',
+              height: '72px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFF',
+              boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)',
+              border: '3px solid rgba(255,255,255,0.2)'
+            }}>
+              <span style={{ fontSize: '1.6rem', fontWeight: 900, lineHeight: 1 }}>84</span>
+              <span style={{ fontSize: '0.6rem', textTransform: 'uppercase', fontWeight: 700 }}>/ 100</span>
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFF' }}>Organization Procurement Health Score</h2>
+                <span className="badge badge-emerald">EXCELLENT</span>
+              </div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                Single executive control dashboard analyzing supplier risk, policy compliance, and approval throughput.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1.5rem', background: '#0F172A', padding: '0.75rem 1.25rem', borderRadius: '12px', border: '1px solid #1E293B' }}>
+            <div style={{ textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              <div style={{ color: 'var(--text-dim)' }}>Supplier Risk</div>
+              <strong style={{ color: '#34D399', fontSize: '0.9rem' }}>🟢 Low Risk</strong>
+            </div>
+            <div style={{ width: '1px', background: '#1E293B' }}></div>
+            <div style={{ textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              <div style={{ color: 'var(--text-dim)' }}>Compliance</div>
+              <strong style={{ color: '#FBBF24', fontSize: '0.9rem' }}>🟡 1 Expiring</strong>
+            </div>
+            <div style={{ width: '1px', background: '#1E293B' }}></div>
+            <div style={{ textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              <div style={{ color: 'var(--text-dim)' }}>Budget Control</div>
+              <strong style={{ color: '#34D399', fontSize: '0.9rem' }}>🟢 Optimal</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Indicator Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem' }}>
+          <div style={{ padding: '0.75rem 1rem', background: '#0F172A', borderRadius: '8px', borderLeft: '4px solid #10B981' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Supplier Risk Profile</div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>🟢 7/8 Suppliers Qualified</div>
+          </div>
+          <div style={{ padding: '0.75rem 1rem', background: '#0F172A', borderRadius: '8px', borderLeft: '4px solid #F59E0B' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Contract Compliance</div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>🟡 IT Agreement Expires Soon</div>
+          </div>
+          <div style={{ padding: '0.75rem 1rem', background: '#0F172A', borderRadius: '8px', borderLeft: '4px solid #10B981' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Approval Speed</div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>🟢 4.2 Days Avg Cycle</div>
+          </div>
+          <div style={{ padding: '0.75rem 1rem', background: '#0F172A', borderRadius: '8px', borderLeft: '4px solid #F87171' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Policy Compliance</div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>🟠 1 RFQ Needs 3+ Quotes</div>
+          </div>
+        </div>
+      </div>
+
       {/* KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
         <div className="glass-panel glass-panel-hover" style={{ padding: '1.5rem' }}>

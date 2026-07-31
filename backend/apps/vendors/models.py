@@ -54,3 +54,31 @@ class Vendor(models.Model):
 
     def __str__(self):
         return f"{self.company_name} ({self.get_status_display()} — {self.rating}★)"
+
+class VendorPerformanceSnapshot(models.Model):
+    """
+    Historical Performance Snapshot Model
+    Stores period snapshots (Monthly/Quarterly) for historical trend analytics & AI forecasting
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='performance_snapshots')
+    period_name = models.CharField(max_length=50, help_text="e.g. 2026-Q1 or 2026-07")
+    
+    on_time_delivery_rate = models.DecimalField(max_digits=5, decimal_places=2, default=95.00)
+    quality_pass_rate = models.DecimalField(max_digits=5, decimal_places=2, default=96.50)
+    price_competitiveness_score = models.DecimalField(max_digits=5, decimal_places=2, default=90.00)
+    discrepancy_rate = models.DecimalField(max_digits=5, decimal_places=2, default=2.00)
+    
+    total_orders_fulfilled = models.IntegerField(default=0)
+    total_spend_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0.00)
+    ai_risk_assessment = models.JSONField(default=dict, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('vendor', 'period_name')
+        ordering = ['-period_name']
+
+    def __str__(self):
+        return f"{self.vendor.company_name} [{self.period_name}] - Delivery: {self.on_time_delivery_rate}%, Quality: {self.quality_pass_rate}%"
+

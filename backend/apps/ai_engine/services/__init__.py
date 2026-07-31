@@ -1,0 +1,5 @@
+from .quote_comparison import compare_quotes_with_gemini as generate_quote_comparison_matrix
+from .contract_analysis import audit_contract_with_gemini as audit_contract_risk
+from .procurement_chat import process_copilot_chat_with_gemini as copilot_rag_query
+from .vendor_recommendation import recommend_vendors_with_gemini as recommend_vendors_for_rfq
+from .document_extraction import extract_document_with_gemini

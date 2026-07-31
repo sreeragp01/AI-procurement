@@ -43,3 +43,12 @@ class DashboardMetricsView(APIView):
             "monthly_spend_trend": monthly_spend,
             "category_distribution": category_distribution,
         }, status=status.HTTP_200_OK)
+
+class ProcurementHealthScoreView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        from apps.services.health_score import calculate_procurement_health_score
+        data = calculate_procurement_health_score()
+        return Response(data, status=status.HTTP_200_OK)
+

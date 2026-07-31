@@ -13,10 +13,10 @@ export const AICopilotChat = () => {
   const [loading, setLoading] = useState(false);
 
   const samplePrompts = [
+    "Create an RFQ for 50 Dell laptops under ₹4,000,000.",
+    "Can I award this contract with only two quotations?",
     "Which vendor has the lowest average price?",
-    "Show delayed or pending orders.",
-    "Which contracts expire next month?",
-    "What is our total spend YTD on IT Hardware?"
+    "Which contracts expire next month?"
   ];
 
   const handleSend = async (textToSend = null) => {
@@ -30,7 +30,12 @@ export const AICopilotChat = () => {
 
     try {
       const res = await aiAPI.copilotChat(activeQuery);
-      const aiMsg = { sender: 'ai', text: res?.data?.reply || res?.data?.query || "No response received." };
+      const aiMsg = { 
+        sender: 'ai', 
+        text: res?.data?.reply || res?.data?.query || "No response received.",
+        action_executed: res?.data?.action_executed,
+        action_data: res?.data?.action_data
+      };
       setMessages(prev => [...prev, aiMsg]);
     } catch (err) {
       console.error("Copilot Chat error:", err);
@@ -38,6 +43,7 @@ export const AICopilotChat = () => {
     } finally {
       setLoading(false);
     }
+
   };
 
   return (
