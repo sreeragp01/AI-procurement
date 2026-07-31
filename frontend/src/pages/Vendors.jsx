@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchVendors } from '../services/api';
+import { vendorsAPI } from '../services/api';
 import { Building2, Star, Plus, ShieldCheck, CheckCircle2, Phone, Mail, MapPin } from 'lucide-react';
 
 export const Vendors = () => {
@@ -52,11 +52,11 @@ export const Vendors = () => {
   const [newVendor, setNewVendor] = useState({ company_name: '', contact_person: '', email: '', phone: '', city: 'Mumbai' });
 
   useEffect(() => {
-    fetchVendors().then(data => {
-      if (data && data.results && data.results.length > 0) {
-        setVendors(data.results);
+    vendorsAPI.getVendors().then(res => {
+      if (res && res.data && Array.isArray(res.data)) {
+        setVendors(res.data);
       }
-    });
+    }).catch(err => console.error("Error loading vendors:", err));
   }, []);
 
   const handleAddVendor = (e) => {
@@ -145,11 +145,11 @@ export const Vendors = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.8rem' }}>
                   <div>
                     <span style={{ color: 'var(--text-dim)' }}>Quality Rating: </span>
-                    <strong style={{ color: '#FFF' }}>{v.ai_performance_score?.quality_score || 95}%</strong>
+                    <strong style={{ color: '#FFF' }}>{v.quality_score || v.ai_performance_score?.quality_score || 95}%</strong>
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-dim)' }}>On-Time Delivery: </span>
-                    <strong style={{ color: '#34D399' }}>{v.ai_performance_score?.on_time_delivery_rate || 92}%</strong>
+                    <strong style={{ color: '#34D399' }}>{v.on_time_delivery_rate || v.ai_performance_score?.on_time_delivery_rate || 92}%</strong>
                   </div>
                 </div>
               </div>
@@ -160,8 +160,8 @@ export const Vendors = () => {
               <span className="badge badge-indigo">
                 {v.categories_details?.[0]?.name || "IT Hardware"}
               </span>
-              <span className={`badge ${v.ai_performance_score?.risk_level === 'MEDIUM' ? 'badge-amber' : 'badge-emerald'}`}>
-                {v.ai_performance_score?.risk_level || 'LOW RISK'}
+              <span className={`badge ${v.risk_level === 'MEDIUM' ? 'badge-amber' : 'badge-emerald'}`}>
+                {v.risk_level || 'LOW RISK'}
               </span>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchPurchaseRequests } from '../services/api';
+import { procurementAPI } from '../services/api';
 import { ShoppingBag, Plus, Calendar, DollarSign, Tag, CheckCircle2, Clock, Check, X, FileCheck2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -53,11 +53,11 @@ export const PurchaseRequests = () => {
   });
 
   useEffect(() => {
-    fetchPurchaseRequests().then(data => {
-      if (data && data.results && data.results.length > 0) {
-        setRequests(data.results);
+    procurementAPI.getPurchaseRequests().then(res => {
+      if (res && res.data && Array.isArray(res.data)) {
+        setRequests(res.data);
       }
-    });
+    }).catch(err => console.error("Error loading purchase requests:", err));
   }, []);
 
   const approvePR = (id) => {
@@ -138,7 +138,7 @@ export const PurchaseRequests = () => {
                   </span>
                 </td>
                 <td>
-                  <strong style={{ color: '#FFF' }}>₹{parseFloat(r.total_budget).toLocaleString()}</strong>
+                  <strong style={{ color: '#FFF' }}>₹{parseFloat(r.total_budget || 0).toLocaleString()}</strong>
                 </td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>

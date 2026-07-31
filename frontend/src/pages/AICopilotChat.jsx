@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { sendCopilotQuery } from '../services/api';
+import { aiAPI } from '../services/api';
 import { Bot, Send, Sparkles, User, HelpCircle } from 'lucide-react';
 
 export const AICopilotChat = () => {
@@ -28,11 +28,16 @@ export const AICopilotChat = () => {
     if (!textToSend) setQuery('');
     setLoading(true);
 
-    const res = await sendCopilotQuery(activeQuery);
-    const aiMsg = { sender: 'ai', text: res.reply };
-
-    setMessages(prev => [...prev, aiMsg]);
-    setLoading(false);
+    try {
+      const res = await aiAPI.copilotChat(activeQuery);
+      const aiMsg = { sender: 'ai', text: res?.data?.reply || res?.data?.query || "No response received." };
+      setMessages(prev => [...prev, aiMsg]);
+    } catch (err) {
+      console.error("Copilot Chat error:", err);
+      setMessages(prev => [...prev, { sender: 'ai', text: "Error connecting to AI Copilot engine." }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

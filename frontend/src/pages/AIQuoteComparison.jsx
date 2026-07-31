@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchAIQuoteComparison } from '../services/api';
+import { aiAPI } from '../services/api';
 import { Dropzone } from '../components/common/Dropzone';
 import { 
   Scale, 
@@ -77,11 +77,11 @@ export const AIQuoteComparison = () => {
   const [awarded, setAwarded] = useState(false);
 
   useEffect(() => {
-    fetchAIQuoteComparison().then(res => {
-      if (res && res.comparison_matrix) {
-        setData(res);
+    aiAPI.getQuoteMatrix("RFQ-2026-0001").then(res => {
+      if (res && res.data && res.data.comparison_matrix) {
+        setData(res.data);
       }
-    });
+    }).catch(err => console.error("Error fetching AI quote matrix:", err));
   }, []);
 
   const handleAwardRFQ = () => {
