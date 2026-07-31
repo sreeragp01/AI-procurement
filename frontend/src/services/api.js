@@ -1,86 +1,101 @@
-import axios from 'axios';
-
 const API_BASE_URL = '/api/v1';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const customFetch = async (endpoint, options = {}) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const isFormData = options.body instanceof FormData;
 
-export default api;
+  const headers = isFormData
+    ? { ...(options.headers || {}) }
+    : {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  const contentType = response.headers.get('content-type');
+  let data = null;
+  if (contentType && contentType.includes('application/json')) {
+    data = await response.json();
+  } else {
+    data = await response.text();
+  }
+
+  if (!response.ok) {
+    const error = new Error(`HTTP error! status: ${response.status}`);
+    error.data = data;
+    throw error;
+  }
+
+  return { data, status: response.status };
+};
 
 export const authAPI = {
-  login: (credentials) => api.post('/auth/login/', credentials),
-  register: (userData) => api.post('/auth/register/', userData),
+  login: (credentials) => customFetch('/auth/login/', { method: 'POST', body: JSON.stringify(credentials) }),
+  register: (userData) => customFetch('/auth/register/', { method: 'POST', body: JSON.stringify(userData) }),
 };
 
 export const vendorsAPI = {
-  getVendors: () => api.get('/vendors/'),
-  getVendorById: (id) => api.get(`/vendors/${id}/`),
-  createVendor: (data) => api.post('/vendors/', data),
-  getCategories: () => api.get('/categories/'),
+  getVendors: () => customFetch('/vendors/'),
+  getVendorById: (id) => customFetch(`/vendors/${id}/`),
+  createVendor: (data) => customFetch('/vendors/', { method: 'POST', body: JSON.stringify(data) }),
+  getCategories: () => customFetch('/categories/'),
 };
 
 export const procurementAPI = {
-  // Organizations & Departments
-  getOrganizations: () => api.get('/organizations/'),
-  getDepartments: () => api.get('/departments/'),
+  getOrganizations: () => customFetch('/organizations/'),
+  getDepartments: () => customFetch('/departments/'),
 
-  // Purchase Requests
-  getPurchaseRequests: () => api.get('/purchase-requests/'),
-  createPurchaseRequest: (data) => api.post('/purchase-requests/', data),
-  approvePurchaseRequest: (id, data) => api.post(`/purchase-requests/${id}/approve/`, data),
-  rejectPurchaseRequest: (id, data) => api.post(`/purchase-requests/${id}/reject/`, data),
-  generateRFQ: (id) => api.post(`/purchase-requests/${id}/generate-rfq/`),
+  getPurchaseRequests: () => customFetch('/purchase-requests/'),
+  createPurchaseRequest: (data) => customFetch('/purchase-requests/', { method: 'POST', body: JSON.stringify(data) }),
+  approvePurchaseRequest: (id, data) => customFetch(`/purchase-requests/${id}/approve/`, { method: 'POST', body: JSON.stringify(data || {}) }),
+  rejectPurchaseRequest: (id, data) => customFetch(`/purchase-requests/${id}/reject/`, { method: 'POST', body: JSON.stringify(data || {}) }),
+  generateRFQ: (id) => customFetch(`/purchase-requests/${id}/generate-rfq/`, { method: 'POST' }),
 
-  // Approval Engine & Rules
-  getApprovalRules: () => api.get('/approval-rules/'),
-  getApprovalLogs: () => api.get('/approval-logs/'),
+  getWorkflowRules: () => customFetch('/workflow-rules/'),
+  getApprovalRules: () => customFetch('/approval-rules/'),
+  getApprovalLogs: () => customFetch('/approval-logs/'),
 
-  // RFQs & Invitations
-  getRFQs: () => api.get('/rfqs/'),
-  getVendorInvitations: () => api.get('/vendor-invitations/'),
+  getNotifications: () => customFetch('/notifications/'),
+  markNotificationRead: (id) => customFetch(`/notifications/${id}/mark-read/`, { method: 'POST' }),
 
-  // Purchase Orders
-  getPurchaseOrders: () => api.get('/purchase-orders/'),
-  createPOFromQuotation: (data) => api.post('/purchase-orders/create-from-quotation/', data),
-  advancePOStatus: (id) => api.post(`/purchase-orders/${id}/advance-status/`),
+  getRFQs: () => customFetch('/rfqs/'),
+  getVendorInvitations: () => customFetch('/vendor-invitations/'),
 
-  // Goods Receipts (GRN)
-  getGoodsReceipts: () => api.get('/goods-receipts/'),
-  createGoodsReceipt: (data) => api.post('/goods-receipts/', data),
+  getPurchaseOrders: () => customFetch('/purchase-orders/'),
+  createPOFromQuotation: (data) => customFetch('/purchase-orders/create-from-quotation/', { method: 'POST', body: JSON.stringify(data) }),
+  advancePOStatus: (id) => customFetch(`/purchase-orders/${id}/advance-status/`, { method: 'POST' }),
 
-  // Invoices (3-Way Match)
-  getInvoices: () => api.get('/invoices/'),
-  createInvoice: (data) => api.post('/invoices/', data),
+  getGoodsReceipts: () => customFetch('/goods-receipts/'),
+  createGoodsReceipt: (data) => customFetch('/goods-receipts/', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Payments
-  getPayments: () => api.get('/payments/'),
-  createPayment: (data) => api.post('/payments/', data),
+  getInvoices: () => customFetch('/invoices/'),
+  createInvoice: (data) => customFetch('/invoices/', { method: 'POST', body: JSON.stringify(data) }),
+
+  getPayments: () => customFetch('/payments/'),
+  createPayment: (data) => customFetch('/payments/', { method: 'POST', body: JSON.stringify(data) }),
 };
 
 export const quotationsAPI = {
-  getQuotations: (rfqId) => api.get(`/quotations/${rfqId ? `?rfq=${rfqId}` : ''}`),
-  uploadQuotationPDF: (formData) => api.post('/quotations/upload/', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
+  getQuotations: (rfqId) => customFetch(`/quotations/${rfqId ? `?rfq=${rfqId}` : ''}`),
+  uploadQuotationPDF: (formData) => customFetch('/quotations/upload/', { method: 'POST', body: formData }),
 };
 
 export const contractsAPI = {
-  getContracts: () => api.get('/contracts/'),
-  uploadContractPDF: (formData) => api.post('/contracts/upload-audit/', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
+  getContracts: () => customFetch('/contracts/'),
+  uploadContractPDF: (formData) => customFetch('/contracts/upload-audit/', { method: 'POST', body: formData }),
 };
 
 export const aiAPI = {
-  getQuoteMatrix: (rfqId) => api.get(`/ai/quote-matrix/?rfq_id=${rfqId}`),
-  auditContractRisk: (title, vendorId) => api.post('/ai/audit-contract-risk/', { title, vendor_id: vendorId }),
-  copilotChat: (query) => api.post('/ai/copilot-chat/', { query }),
+  getQuoteMatrix: (rfqId) => customFetch(`/ai/quote-matrix/${rfqId}/`),
+  auditContractRisk: (title, vendorId) => customFetch('/ai/audit-contract-risk/', { method: 'POST', body: JSON.stringify({ title, vendor_id: vendorId }) }),
+  copilotChat: (query) => customFetch('/ai/copilot-chat/', { method: 'POST', body: JSON.stringify({ query }) }),
+  recommendVendors: (rfqId) => customFetch('/ai/recommend-vendors/', { method: 'POST', body: JSON.stringify({ rfq_id: rfqId }) }),
 };
 
 export const dashboardAPI = {
-  getMetrics: () => api.get('/dashboard/metrics/'),
+  getMetrics: () => customFetch('/dashboard/metrics/'),
 };
