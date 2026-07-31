@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Layout } from './components/layout/Layout';
+import { LandingPage } from './pages/LandingPage';
 import { Dashboard } from './pages/Dashboard';
 import { Vendors } from './pages/Vendors';
 import { PurchaseRequests } from './pages/PurchaseRequests';
@@ -16,6 +17,10 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Public Landing Page */}
+          <Route path="/landing" element={<LandingPage />} />
+
+          {/* SaaS Application Shell */}
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="vendors" element={<Vendors />} />
