@@ -7,7 +7,8 @@ from .views import (
     AISpendForecastingView,
     AIDuplicateCheckView,
     AIPolicyValidateView,
-    AIContractRenewalsView
+    AIContractRenewalsView,
+    AIDocumentVerifyView
 )
 
 urlpatterns = [
@@ -19,5 +20,7 @@ urlpatterns = [
     path('duplicate-check/', AIDuplicateCheckView.as_view(), name='ai-duplicate-check'),
     path('policy-validate/<uuid:rfq_id>/', AIPolicyValidateView.as_view(), name='ai-policy-validate'),
     path('contract-renewals/', AIContractRenewalsView.as_view(), name='ai-contract-renewals'),
+    path('document-verify/', AIDocumentVerifyView.as_view(), name='ai-document-verify'),
 ]
+
 

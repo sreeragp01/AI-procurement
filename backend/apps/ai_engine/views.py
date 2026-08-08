@@ -85,3 +85,16 @@ class AIContractRenewalsView(APIView):
         contracts = get_expiring_contracts()
         return Response({'expiring_contracts': contracts}, status=status.HTTP_200_OK)
 
+class AIDocumentVerifyView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def post(self, request):
+        from apps.services.document_authenticity import verify_document_originality
+        uploaded_file = request.FILES.get('document', None)
+        gstin = request.data.get('gstin', '')
+        
+        file_bytes = uploaded_file.read() if uploaded_file else None
+        res = verify_document_originality(file_bytes=file_bytes, vendor_gstin=gstin)
+        return Response(res, status=status.HTTP_200_OK)
+
+
